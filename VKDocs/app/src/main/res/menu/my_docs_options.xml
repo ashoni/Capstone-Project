@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?><!-- http://romannurik.github.io/AndroidAssetStudio/icons-actionbar.html#source.type=clipart&source.space.trim=0&source.space.pad=0&source.clipart=res%2Fclipart%2Ficons%2Faction_delete.svg&name=ic_action_action_delete&theme=light&color=33b5e5%2C60 -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <group android:id="@+id/share_group">
+        <item
+            android:id="@+id/doc_share_link"
+            android:icon="@drawable/ic_insert_link_black_24dp"
+            android:title="Share link" />
+        <item
+            android:id="@+id/doc_share"
+            android:icon="@drawable/ic_share_black_24dp"
+            android:title="Send file" />
+    </group>
+
+    <!-- Line -->
+
+    <group android:id="@+id/manage_group">
+        <item
+            android:id="@+id/doc_download"
+            android:icon="@drawable/ic_file_download_black_24dp"
+            android:title="Download" />
+        <item
+            android:id="@+id/doc_offline"
+            android:icon="@drawable/ic_offline_pin_black_24dp"
+            app:actionLayout="@layout/switch_layout"
+            app:showAsAction="always"
+            android:title="Available offline" />
+        <item
+            android:id="@+id/doc_rename"
+            android:icon="@drawable/ic_border_color_black_24dp"
+            android:title="Rename" />
+    </group>
+
+    <!-- Line -->
+
+    <group android:id="@+id/delete_group">
+        <item
+            android:id="@+id/doc_delete"
+            android:icon="@drawable/ic_delete_black_24dp"
+            android:title="Remove" />
+    </group>
+
+</menu>

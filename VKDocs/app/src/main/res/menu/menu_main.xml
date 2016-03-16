@@ -1,0 +1,15 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.shustrik.vkdocs.MainActivity">
+    <item
+        android:id="@+id/sort"
+        android:orderInCategory="100"
+        android:title="Sort"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/view_type"
+        android:orderInCategory="100"
+        android:title="GridView"
+        app:showAsAction="never" />
+</menu>
