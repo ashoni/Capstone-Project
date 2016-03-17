@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements SelectCallback {
 
     private MainActivityFragment getMyDocsFragment() {
         DocDownloader docDownloader = new DocDownloader(this);
-        CursorDocListAdapter adapter = new CursorDocListAdapter(this, docDownloader);
+        CursorDocListAdapter adapter = new CursorDocListAdapter(this, docDownloader, R.menu.my_docs_options);
         return MainActivityFragment.getInstance(
                 adapter,
                 new MyDocsLoader(this, getSupportLoaderManager(), adapter, mSwipeRefreshLayout),
@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements SelectCallback {
 
     private MainActivityFragment getDialogDocsFragment(int peerId) {
         DocDownloader docDownloader = new DocDownloader(this);
-        SpecDocListAdapter adapter = new SpecDocListAdapter(this, docDownloader);
+        SpecDocListAdapter adapter = new SpecDocListAdapter(this, docDownloader, R.menu.dialog_docs_options);
         return MainActivityFragment.getInstance(
                 adapter,
                 new DialogDocsLoader(adapter, peerId, mSwipeRefreshLayout),
@@ -225,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements SelectCallback {
 
     private MainActivityFragment getCommunityDocsFragment(int peerId) {
         DocDownloader docDownloader = new DocDownloader(this);
-        SpecDocListAdapter adapter = new SpecDocListAdapter(this, docDownloader);
+        SpecDocListAdapter adapter = new SpecDocListAdapter(this, docDownloader, R.menu.community_docs_options);
         return MainActivityFragment.getInstance(
                 adapter,
                 new CommunityDocsLoader(adapter, peerId, mSwipeRefreshLayout),

@@ -18,14 +18,19 @@ public class SpecDocListAdapter extends BaseDocListAdapter {
     private int loadingThreshold = 3;
 
 
-    public SpecDocListAdapter(Context context, DocDownloader docDownloader) {
-        super(context, docDownloader);
+    public SpecDocListAdapter(Context context, DocDownloader docDownloader, int menuId) {
+        super(context, docDownloader, menuId);
     }
 
     public void setLoadMore(LoadMore loadMore) {
         this.loadMore = loadMore;
     }
 
+    @Override
+    public MyVKApiDocument getDocumentOnMenuClick() {
+        int position = getDocumentOnMenuPosition();
+        return (position >= 0 && position < documents.size()) ? documents.get(position) : null;
+    }
 
     @Override
     void moveToPosition(int position) {

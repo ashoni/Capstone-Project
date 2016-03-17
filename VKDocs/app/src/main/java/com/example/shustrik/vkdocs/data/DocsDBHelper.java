@@ -8,6 +8,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.example.shustrik.vkdocs.data.DocsContract.DocumentEntry;
 import com.example.shustrik.vkdocs.data.DocsContract.UserEntry;
 import com.example.shustrik.vkdocs.data.DocsContract.FileEntry;
+import com.example.shustrik.vkdocs.data.DocsContract.CommunityEntry;
+import com.example.shustrik.vkdocs.data.DocsContract.DialogEntry;
 
 public class DocsDBHelper extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 2;
@@ -46,8 +48,23 @@ public class DocsDBHelper extends SQLiteOpenHelper {
                 " );";
 
         final String SQL_CREATE_USER_TABLE = "CREATE TABLE " + UserEntry.TABLE_NAME + " (" +
-                UserEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                UserEntry._ID + " INTEGER PRIMARY KEY," +
                 UserEntry.COLUMN_LAST + " INTEGER NOT NULL " +
+                " );";
+
+        final String SQL_CREATE_GROUP_TABLE = "CREATE TABLE " + CommunityEntry.TABLE_NAME + " (" +
+                CommunityEntry._ID + " INTEGER PRIMARY KEY," +
+                CommunityEntry.COLUMN_TITLE + " TEXT NOT NULL " +
+                CommunityEntry.COLUMN_PREVIEW_URL + " TEXT NOT NULL " +
+                CommunityEntry.COLUMN_DATE + " INTEGER NOT NULL" +
+                " );";
+
+        final String SQL_CREATE_DIALOG_TABLE = "CREATE TABLE " + DialogEntry.TABLE_NAME + " (" +
+                DialogEntry._ID + " INTEGER PRIMARY KEY," +
+                DialogEntry.COLUMN_TITLE + " TEXT NOT NULL," +
+                DialogEntry.COLUMN_PEOPLE + " TEXT NOT NULL," +
+                DialogEntry.COLUMN_PREVIEW_URL + " TEXT NOT NULL," +
+                DialogEntry.COLUMN_DATE + " INTEGER NOT NULL" +
                 " );";
 
         db.execSQL(SQL_CREATE_USER_TABLE);

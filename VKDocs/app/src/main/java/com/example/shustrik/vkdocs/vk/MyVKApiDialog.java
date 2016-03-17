@@ -26,7 +26,9 @@ public class MyVKApiDialog extends VKApiDialog implements MyVKEntity {
         parse(from);
         Log.w("ANNA", "I'm dialog " + message.user_id);
         Log.w("ANNA", from.toString());
-        parseRest(from);
+        if (!from.isNull("message")) {
+            parseRest(from.getJSONObject("message"));
+        }
     }
 
 
@@ -77,19 +79,23 @@ public class MyVKApiDialog extends VKApiDialog implements MyVKEntity {
     }
 
     public void setDialogParams(List<VKApiUser> users) {
+        Log.w("ANNA", "set chat users " + users.size());
         StringBuilder sb = new StringBuilder();
         sb.append(users.get(0).first_name);
         sb.append(" ");
         sb.append(users.get(0).last_name);
         for (int i = 1; i < users.size() && i < 3; i ++) {
-            sb.append(",");
+            Log.w("ANNA", "user " + i);
+            sb.append(", ");
             sb.append(users.get(i).first_name);
             sb.append(" ");
             sb.append(users.get(i).last_name);
+            Log.w("ANNA", sb.toString());
         }
         if (users.size() > 3) {
-            sb.append("...");
+            sb.append("...(");
             sb.append(users.size());
+            sb.append(")");
         }
         dialogName = sb.toString();
         previewUrl = null;

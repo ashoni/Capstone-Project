@@ -14,6 +14,7 @@ import com.example.shustrik.vkdocs.R;
 import com.example.shustrik.vkdocs.common.Utils;
 import com.example.shustrik.vkdocs.download.DocDownloader;
 import com.example.shustrik.vkdocs.uicommon.DocIcons;
+import com.example.shustrik.vkdocs.vk.MyVKApiDocument;
 import com.squareup.picasso.Picasso;
 
 import butterknife.Bind;
@@ -27,10 +28,13 @@ public abstract class BaseDocListAdapter extends RecyclerView.Adapter<BaseDocLis
     private DocDownloader docDownloader;
     private View loadingView;
     protected boolean loading;
+    private int menuId;
+    private int documentOnMenuPosition;
 
-    public BaseDocListAdapter(Context context, DocDownloader docDownloader) {
+    public BaseDocListAdapter(Context context, DocDownloader docDownloader, int menuId) {
         this.context = context;
         this.docDownloader = docDownloader;
+        this.menuId = menuId;
     }
 
     @Override
@@ -69,7 +73,7 @@ public abstract class BaseDocListAdapter extends RecyclerView.Adapter<BaseDocLis
             int layoutId = R.layout.doc_list_item;
             View view = LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, false);
             view.setFocusable(true);
-            return new BaseAdapterViewHolder(view);
+            return new BaseAdapterViewHolder(view, menuId);
         } else {
             throw new RuntimeException("Not bound to RecyclerView");
         }
@@ -118,6 +122,16 @@ public abstract class BaseDocListAdapter extends RecyclerView.Adapter<BaseDocLis
         }
     }
 
+    public abstract MyVKApiDocument getDocumentOnMenuClick();
+
+    private void setDocumentOnMenuPosition(int position) {
+        documentOnMenuPosition = position;
+    }
+
+    protected int getDocumentOnMenuPosition() {
+        return documentOnMenuPosition;
+    }
+
     public class BaseAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         @Bind(R.id.list_item_preview)
         ImageView preview;
@@ -138,12 +152,11 @@ public abstract class BaseDocListAdapter extends RecyclerView.Adapter<BaseDocLis
         private String url;
         private DocItemMenuListener docItemMenuListener;
 
-        public BaseAdapterViewHolder(View view) {
+        public BaseAdapterViewHolder(View view, int menuId) {
             super(view);
             ButterKnife.bind(this, view);
             Log.w("ANNA", "here");
-            docItemMenuListener = new DocItemMenuListener(context, R.menu.my_docs_options,
-                    recyclerView);
+            docItemMenuListener = new DocItemMenuListener(context, menuId, recyclerView);
             overflow.setOnClickListener(docItemMenuListener);
             view.setOnClickListener(this);
             cancel.setOnClickListener(new View.OnClickListener() {

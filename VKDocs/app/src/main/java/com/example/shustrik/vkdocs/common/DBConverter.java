@@ -1,6 +1,9 @@
 package com.example.shustrik.vkdocs.common;
 
+import android.content.ContentValues;
+
 import com.example.shustrik.vkdocs.data.DocsContract;
+import com.example.shustrik.vkdocs.vk.MyVKApiDocument;
 
 public class DBConverter {
     public static final String[] DOC_CONST_COLUMNS = {
@@ -43,4 +46,24 @@ public class DBConverter {
     public static final int COL_FILE_NAME = 1;
     public static final int COL_FILE_LAST = 2;
     public static final int COL_FILE_OFFLINE = 3;
+
+
+    //Использовать при синхронизации
+    public static ContentValues parseIntoValues(MyVKApiDocument doc) {
+        ContentValues docsValues = new ContentValues();
+        docsValues.put(DocsContract.DocumentEntry._ID, doc.id);
+        docsValues.put(DocsContract.DocumentEntry.COLUMN_ACCESS_KEY, doc.access_key);
+        docsValues.put(DocsContract.DocumentEntry.COLUMN_OWNER_ID, doc.owner_id);
+        docsValues.put(DocsContract.DocumentEntry.COLUMN_SIZE, doc.size);
+        docsValues.put(DocsContract.DocumentEntry.COLUMN_TITLE, doc.title);
+        docsValues.put(DocsContract.DocumentEntry.COLUMN_TYPE, doc.getFileType());
+        docsValues.put(DocsContract.DocumentEntry.COLUMN_URL, doc.url);
+        docsValues.put(DocsContract.DocumentEntry.COLUMN_DATE, doc.getDate());
+        if (!doc.photo_130.isEmpty()) {
+            docsValues.put(DocsContract.DocumentEntry.COLUMN_PREVIEW_URL, doc.photo_130);
+        } else if (!doc.photo_100.isEmpty()) {
+            docsValues.put(DocsContract.DocumentEntry.COLUMN_PREVIEW_URL, doc.photo_100);
+        }
+        return docsValues;
+    }
 }

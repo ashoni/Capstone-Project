@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
+import android.widget.BaseAdapter;
 import android.widget.PopupMenu;
 
 import com.example.shustrik.vkdocs.R;
@@ -64,8 +65,30 @@ class DocItemMenuListener implements View.OnClickListener {
                         });
                         return true;
 
+                    case R.id.doc_rename:
+                        //get title
+//                        DocUtils.rename(ownerId, docId, title, context, new DocUtils.RequestCallback() {
+//                            @Override
+//                            public void onSuccess() {
+//                                //adapter, rename, notify? view, rename?
+//                            }
+//
+//                            @Override
+//                            public void onFailure() {
+//
+//                            }
+//                        });
+                        return true;
+                    case R.id.doc_offline:
+                        return true;
+                    case R.id.doc_download:
+                        return true;
+                    case R.id.doc_add:
+                        DocUtils.add(((BaseDocListAdapter)(recyclerView.getAdapter())).getDocumentOnMenuClick(), context);
+                        return true;
+                    case R.id.doc_share_link:
+                        return true;
                     case R.id.doc_share:
-                        //renameAlbum(mAlbum);
                         return true;
 
                     default:

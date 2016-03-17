@@ -16,6 +16,8 @@ public class DocsContract {
     public static final String PATH_DOCS = "docs";
     public static final String PATH_USERS = "users";
     public static final String PATH_FILES = "files";
+    public static final String PATH_GROUPS = "groups";
+    public static final String PATH_DIALOGS = "dialogs";
 
     public static final class DocumentEntry implements BaseColumns {
         public static final Uri CONTENT_URI =
@@ -100,4 +102,59 @@ public class DocsContract {
             return uri.getLastPathSegment();
         }
     }
+
+    public static final class DialogEntry implements BaseColumns {
+        public static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_DIALOGS).build();
+
+        public static final String CONTENT_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_DIALOGS;
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_DIALOGS;
+
+        // Table name
+        public static final String TABLE_NAME = "dialogs";
+
+        public static final String COLUMN_TITLE = "title";
+        public static final String COLUMN_PEOPLE = "people";
+        public static final String COLUMN_TYPE = "dialog_type";
+        public static final String COLUMN_PREVIEW_URL = "preview_url";
+        public static final String COLUMN_DATE = "date";
+
+
+        public static Uri buildDialogsUri(long id) {
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
+        public static String sortDateDesc() {
+            return "date DESC";
+        }
+    }
+
+    public static final class CommunityEntry implements BaseColumns {
+        public static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_GROUPS).build();
+
+        public static final String CONTENT_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_GROUPS;
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_GROUPS;
+
+        // Table name
+        public static final String TABLE_NAME = "groups";
+
+        public static final String COLUMN_TITLE = "title";
+        public static final String COLUMN_PREVIEW_URL = "preview_url";
+        public static final String COLUMN_DATE = "date";
+
+        public static Uri buildCommunityUri(long id) {
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
+        public static String sortDateDesc() {
+            return "date DESC";
+        }
+    }
+
 }
+

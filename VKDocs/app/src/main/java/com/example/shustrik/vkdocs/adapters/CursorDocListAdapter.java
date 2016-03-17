@@ -6,13 +6,14 @@ import android.view.View;
 
 import com.example.shustrik.vkdocs.common.DBConverter;
 import com.example.shustrik.vkdocs.download.DocDownloader;
+import com.example.shustrik.vkdocs.vk.MyVKApiDocument;
 
 public class CursorDocListAdapter extends BaseDocListAdapter {
     private Cursor cursor;
 
 
-    public CursorDocListAdapter(Context context, DocDownloader docDownloader) {
-        super(context, docDownloader);
+    public CursorDocListAdapter(Context context, DocDownloader docDownloader, int menuId) {
+        super(context, docDownloader, menuId);
     }
 
 
@@ -50,5 +51,13 @@ public class CursorDocListAdapter extends BaseDocListAdapter {
     @Override
     void moveToPosition(int position) {
         cursor.moveToPosition(position);
+    }
+
+    @Override
+    public MyVKApiDocument getDocumentOnMenuClick() {
+        //moveToPosition(getDocumentOnMenuPosition());
+        //add create MyVKApiDocument from cursor to DBConverter
+        //а нужно ли? это меню отсюда никогда не вызовется
+        return null;
     }
 }

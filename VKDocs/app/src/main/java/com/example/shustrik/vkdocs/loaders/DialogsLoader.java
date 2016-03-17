@@ -162,11 +162,14 @@ public class DialogsLoader implements CustomLoader {
                 completeDialogs.add(dialog);
             } else {
                 boolean got = false;
+                Log.w("ANNA", "loader; chat");
                 List<VKApiUser> chatUsers = new ArrayList<>();
                 for (int peerId : dialog.getPeerIds()) {
+                    Log.w("ANNA", "Must be chat user " + peerId);
                     if (userMap.containsKey(peerId)) {
                         got = true;
                         chatUsers.add(userMap.get(peerId));
+                        Log.w("ANNA", "Added chat user: " + userMap.get(peerId).first_name);
                     }
                 }
                 if (got) {

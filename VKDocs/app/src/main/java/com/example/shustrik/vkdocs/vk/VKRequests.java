@@ -255,9 +255,13 @@ public class VKRequests {
 
     public static void addToUserDocs(final VKRequestCallback<Void> callback,
                                      long ownerId, long docId, String accessKey) {
-        VKRequest request = new VKRequest("docs.add",
-                VKParameters.from("owner_id", ownerId, "doc_id", docId, "access_key", accessKey));
-        executeWithEmptyResult(request, callback);
+        if (accessKey == null || accessKey.isEmpty()) {
+            addToUserDocs(callback, ownerId, docId);
+        } else {
+            VKRequest request = new VKRequest("docs.add",
+                    VKParameters.from("owner_id", ownerId, "doc_id", docId, "access_key", accessKey));
+            executeWithEmptyResult(request, callback);
+        }
     }
 
 
