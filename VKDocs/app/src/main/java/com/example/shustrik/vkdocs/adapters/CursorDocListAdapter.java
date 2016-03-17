@@ -30,6 +30,7 @@ public class CursorDocListAdapter extends BaseDocListAdapter {
         setPreview(holder, cursor.getString(DBConverter.COL_PREVIEW_URL),
                 cursor.getInt(DBConverter.COL_TYPE));
 
+        setPosition(holder, position);
     }
 
 
@@ -54,10 +55,18 @@ public class CursorDocListAdapter extends BaseDocListAdapter {
     }
 
     @Override
-    public MyVKApiDocument getDocumentOnMenuClick() {
+    public MyVKApiDocument getDocumentOnMenuClick(int position) {
         //moveToPosition(getDocumentOnMenuPosition());
         //add create MyVKApiDocument from cursor to DBConverter
         //а нужно ли? это меню отсюда никогда не вызовется
         return null;
+    }
+
+    @Override
+    public void rename(int position, String title) {
+        moveToPosition(position);
+        BaseAdapterViewHolder holder = (BaseAdapterViewHolder)recyclerView.findViewHolderForAdapterPosition(position);
+        setTitle(holder, cursor.getString(DBConverter.COL_TITLE));
+        notifyItemChanged(position);
     }
 }

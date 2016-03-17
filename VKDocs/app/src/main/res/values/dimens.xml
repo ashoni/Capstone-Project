@@ -10,4 +10,6 @@
     <dimen name="doc_list_item_margin">5dp</dimen>
     <dimen name="doc_list_item_padding">10dp</dimen>
     <dimen name="preview_size">100dp</dimen>
+
+    <dimen name="popup_padding">10dp</dimen>
 </resources>
