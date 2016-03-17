@@ -92,6 +92,7 @@ public abstract class BaseDocListAdapter extends RecyclerView.Adapter<BaseDocLis
 
     protected void setTitle(BaseAdapterViewHolder holder, String title) {
         holder.title.setText(title);
+        holder.getDocItemMenuListener().setTitle(title);
     }
 
     protected void setSize(BaseAdapterViewHolder holder, int size) {
@@ -122,15 +123,13 @@ public abstract class BaseDocListAdapter extends RecyclerView.Adapter<BaseDocLis
         }
     }
 
-    public abstract MyVKApiDocument getDocumentOnMenuClick();
-
-    private void setDocumentOnMenuPosition(int position) {
-        documentOnMenuPosition = position;
+    protected void setPosition(BaseAdapterViewHolder holder, int position) {
+        holder.getDocItemMenuListener().setPosition(position);
     }
 
-    protected int getDocumentOnMenuPosition() {
-        return documentOnMenuPosition;
-    }
+    public abstract MyVKApiDocument getDocumentOnMenuClick(int position);
+
+    public abstract void rename(int position, String title);
 
     public class BaseAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         @Bind(R.id.list_item_preview)

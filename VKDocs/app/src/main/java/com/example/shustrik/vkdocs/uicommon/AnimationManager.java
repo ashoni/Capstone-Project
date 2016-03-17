@@ -25,4 +25,27 @@ public class AnimationManager {
         animFadeOut.setFillAfter(true);
         return animFadeOut;
     }
+
+
+    public static Animation getAnimFadeOut(Context context, final View view) {
+        Animation animFadeOut = AnimationUtils.loadAnimation(context, R.anim.fade_out);
+        animFadeOut.setFillAfter(true);
+        animFadeOut.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                view.clearAnimation();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        return animFadeOut;
+    }
 }

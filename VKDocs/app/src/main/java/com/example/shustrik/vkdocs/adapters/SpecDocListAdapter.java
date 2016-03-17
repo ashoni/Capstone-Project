@@ -27,9 +27,14 @@ public class SpecDocListAdapter extends BaseDocListAdapter {
     }
 
     @Override
-    public MyVKApiDocument getDocumentOnMenuClick() {
-        int position = getDocumentOnMenuPosition();
+    public MyVKApiDocument getDocumentOnMenuClick(int position) {
         return (position >= 0 && position < documents.size()) ? documents.get(position) : null;
+    }
+
+    @Override
+    public void rename(int position, String title) {
+        documents.get(position).title = title;
+        notifyItemChanged(position);
     }
 
     @Override
@@ -49,6 +54,8 @@ public class SpecDocListAdapter extends BaseDocListAdapter {
         setUrl(holder, doc.url);
         setOffline(holder, 0);
         setPreview(holder, doc.photo_130, doc.getFileType());
+
+        setPosition(holder, position);
 
         if (!loadFinished && (position >= getItemCount() - loadingThreshold))
             load(position);
