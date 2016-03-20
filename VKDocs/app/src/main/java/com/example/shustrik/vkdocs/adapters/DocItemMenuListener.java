@@ -22,6 +22,7 @@ import android.widget.PopupWindow;
 
 import com.example.shustrik.vkdocs.R;
 import com.example.shustrik.vkdocs.common.DocUtils;
+import com.example.shustrik.vkdocs.download.DefaultDownloader;
 import com.example.shustrik.vkdocs.uicommon.AnimationManager;
 
 import java.lang.reflect.Field;
@@ -36,6 +37,7 @@ class DocItemMenuListener implements View.OnClickListener{
     private int position;
     private boolean isPopup = false;
     private PopupMenu.OnDismissListener animListener;
+    private String url;
 
     public DocItemMenuListener(Context context, int menuRes, RecyclerView recyclerView) {
         this.context = context;
@@ -85,6 +87,7 @@ class DocItemMenuListener implements View.OnClickListener{
                     case R.id.doc_offline:
                         return true;
                     case R.id.doc_download:
+                        DefaultDownloader.getInstance().downloadFile(url, title);
                         return true;
                     case R.id.doc_add:
                         DocUtils.add(((BaseDocListAdapter) (recyclerView.getAdapter()))
@@ -228,16 +231,12 @@ class DocItemMenuListener implements View.OnClickListener{
     private void applyAnimation(int from, int to, Animation animation) {
         for (int i = from; i <= to; i++) {
             final View child = recyclerView.getChildAt(i);
-            if (child == null ||
-                    docId == ((BaseDocListAdapter.BaseAdapterViewHolder)
+            if (child != null && docId != ((BaseDocListAdapter.BaseAdapterViewHolder)
                             (recyclerView.getChildViewHolder(child))).getDocId()) {
-                Log.w("ANNA", "Miss " + i);
-                continue;
+                View childInView = child.findViewById(R.id.list_item_grid);
+                childInView.clearAnimation();
+                childInView.startAnimation(animation);
             }
-            Log.w("ANNA", "Got " + i);
-            View childInView = child.findViewById(R.id.list_item_grid);
-            childInView.clearAnimation();
-            childInView.startAnimation(animation);
         }
     }
 
@@ -255,5 +254,9 @@ class DocItemMenuListener implements View.OnClickListener{
 
     public void setPosition(int position) {
         this.position = position;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 }

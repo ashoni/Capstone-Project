@@ -29,7 +29,6 @@ public abstract class BaseDocListAdapter extends RecyclerView.Adapter<BaseDocLis
     private View loadingView;
     protected boolean loading;
     private int menuId;
-    private int documentOnMenuPosition;
 
     public BaseDocListAdapter(Context context, DocDownloader docDownloader, int menuId) {
         this.context = context;
@@ -105,6 +104,7 @@ public abstract class BaseDocListAdapter extends RecyclerView.Adapter<BaseDocLis
 
     protected void setUrl(BaseAdapterViewHolder holder, String url) {
         holder.setUrl(url);
+        holder.getDocItemMenuListener().setUrl(url);
     }
 
     protected void setOffline(BaseAdapterViewHolder holder, Integer offline) {

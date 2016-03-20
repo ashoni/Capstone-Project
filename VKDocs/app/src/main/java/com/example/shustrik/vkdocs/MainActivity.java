@@ -3,11 +3,13 @@ package com.example.shustrik.vkdocs;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -24,6 +26,7 @@ import android.widget.Toast;
 import com.example.shustrik.vkdocs.adapters.CursorDocListAdapter;
 import com.example.shustrik.vkdocs.adapters.VKEntityListAdapter;
 import com.example.shustrik.vkdocs.adapters.SpecDocListAdapter;
+import com.example.shustrik.vkdocs.download.DefaultDownloader;
 import com.example.shustrik.vkdocs.download.DocDownloader;
 import com.example.shustrik.vkdocs.fragments.MainActivityFragment;
 import com.example.shustrik.vkdocs.loaders.CommunitiesLoader;
@@ -52,7 +55,8 @@ import butterknife.ButterKnife;
  * Проверить по
  * https://www.google.com/design/spec/patterns/navigation-drawer.html#
  */
-public class MainActivity extends AppCompatActivity implements SelectCallback {
+public class MainActivity extends AppCompatActivity implements SelectCallback,
+        ActivityCompat.OnRequestPermissionsResultCallback{
     private SharedPreferences prefs;
 
     @Bind(R.id.toolbar)
@@ -109,6 +113,8 @@ public class MainActivity extends AppCompatActivity implements SelectCallback {
                         .setAction("Action", null).show();
             }
         });
+
+        DefaultDownloader.init(this);
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -345,5 +351,17 @@ public class MainActivity extends AppCompatActivity implements SelectCallback {
         snackbar.show();
     }
 
-
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[],
+                                           int[] grantResults) {
+        switch (requestCode) {
+            case DefaultDownloader.DOWNLOAD_PERMISSION: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    DefaultDownloader.getInstance().download();
+                } else {
+                    snack("Not enough permissions to complete download", Snackbar.LENGTH_SHORT);
+                }
+            }
+        }
+    }
 }
