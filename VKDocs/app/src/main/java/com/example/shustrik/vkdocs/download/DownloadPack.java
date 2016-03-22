@@ -2,31 +2,22 @@ package com.example.shustrik.vkdocs.download;
 
 import android.content.ServiceConnection;
 
-import com.example.shustrik.vkdocs.adapters.BaseDocListAdapter;
-
 import java.io.File;
 
 
-public class DownloadPack {
+class DownloadPack {
     private ServiceConnection connection;
     private DownloadService service;
-    private BaseDocListAdapter.BaseAdapterViewHolder holder;
     private File f;
+    private GOAL goal;
+    private boolean attached = true;
 
-    public DownloadPack(BaseDocListAdapter.BaseAdapterViewHolder holder) {
-        this.holder = holder;
+    public DownloadPack(GOAL goal) {
+        this.goal = goal;
     }
 
     public ServiceConnection getConnection() {
         return connection;
-    }
-
-    public void setProgress(int progress) {
-        holder.getProgressBar().setProgress(progress);
-    }
-
-    public void setDownloadMode(boolean mode) {
-        holder.setDownloadMode(mode);
     }
 
     public DownloadService getService() {
@@ -47,5 +38,30 @@ public class DownloadPack {
 
     public void setFile(File f) {
         this.f = f;
+    }
+
+    public GOAL getGoal() {
+        return goal;
+    }
+
+    public void setGoal(GOAL goal) {
+        this.goal = goal;
+    }
+
+    public boolean isAttached() {
+        return attached;
+    }
+
+    public void setAttached(boolean attached) {
+        this.attached = attached;
+    }
+
+    public void cancelLoading() {
+        service.cancel();
+    }
+
+    enum GOAL {
+        TEMP,
+        SAVE_TO_OFFLINE
     }
 }

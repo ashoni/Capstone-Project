@@ -1,6 +1,7 @@
 package com.example.shustrik.vkdocs.adapters;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +33,16 @@ public class VKEntityListAdapter extends RecyclerView.Adapter<VKEntityListAdapte
     public VKEntityListAdapter(Context context, OnClickHandler handler) {
         this.context = context;
         this.handler = handler;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+
     }
 
     @Override

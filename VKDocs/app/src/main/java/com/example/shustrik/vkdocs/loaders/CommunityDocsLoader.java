@@ -4,7 +4,7 @@ package com.example.shustrik.vkdocs.loaders;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 
-import com.example.shustrik.vkdocs.adapters.SpecDocListAdapter;
+import com.example.shustrik.vkdocs.adapters.DocListAdapter;
 import com.example.shustrik.vkdocs.vk.MyVKDocsArray;
 import com.example.shustrik.vkdocs.vk.MyVKWallDocs;
 import com.example.shustrik.vkdocs.vk.VKRequestCallback;
@@ -15,7 +15,7 @@ import com.vk.sdk.api.VKError;
 // не трогать адаптер. В остальных классах также. Если удалось - всё обновить.
 //Дальше сделать загрузку и персонализировать меню. Убедиться, что параллельная загрузка работает.
 //(файл помечается как доступный оффлайн)
-public class CommunityDocsLoader implements CustomLoader, SpecDocListAdapter.LoadMore {
+public class CommunityDocsLoader implements CustomLoader, DocListAdapter.LoadMore {
     public static String TAG = "ANNA_DDL";
 
     private static final int COMM_COUNT = 30;
@@ -28,11 +28,11 @@ public class CommunityDocsLoader implements CustomLoader, SpecDocListAdapter.Loa
     private ReqParamPack prevCommPack;
     private ReqParamPack prevWallPack;
 
-    private SpecDocListAdapter adapter;
+    private DocListAdapter adapter;
     private SwipeRefreshLayout swipe;
     private boolean isRefreshing = false;
 
-    public CommunityDocsLoader(SpecDocListAdapter adapter, int peerId, SwipeRefreshLayout swipe) {
+    public CommunityDocsLoader(DocListAdapter adapter, int peerId, SwipeRefreshLayout swipe) {
         this.adapter = adapter;
         adapter.setLoadMore(this);
         this.peerId = peerId;
@@ -150,6 +150,7 @@ public class CommunityDocsLoader implements CustomLoader, SpecDocListAdapter.Loa
             adapter.setLoading(false);
         }
         if (error) {
+            //Потому что нельзя так копировать. фуфуфу.
             commPack = prevCommPack;
             wallPack = prevWallPack;
             prevCommPack = null;

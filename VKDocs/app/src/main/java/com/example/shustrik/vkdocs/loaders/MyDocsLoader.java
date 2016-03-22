@@ -11,21 +11,25 @@ import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 
-import com.example.shustrik.vkdocs.adapters.CursorDocListAdapter;
+import com.example.shustrik.vkdocs.adapters.DocListAdapter;
 import com.example.shustrik.vkdocs.common.DBConverter;
 import com.example.shustrik.vkdocs.data.DocsContract;
+import com.example.shustrik.vkdocs.vk.MyVKApiDocument;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MyDocsLoader implements CustomLoader, LoaderManager.LoaderCallbacks<Cursor> {
     private final int DOC_LOADER = 13;
     private Context context;
     private LoaderManager loaderManager;
-    private CursorDocListAdapter adapter;
+    private DocListAdapter adapter;
     private SwipeRefreshLayout swipe;
     private boolean isRefreshing = false;
 
     public MyDocsLoader(Context context, LoaderManager loaderManager,
-                        CursorDocListAdapter adapter, SwipeRefreshLayout swipe) {
+                        DocListAdapter adapter, SwipeRefreshLayout swipe) {
         this.context = context;
         this.loaderManager = loaderManager;
         this.adapter = adapter;
@@ -42,16 +46,19 @@ public class MyDocsLoader implements CustomLoader, LoaderManager.LoaderCallbacks
 
     @Override
     public void initLoader() {
+        Log.w("ANNA", "Init loader");
         if (!isRefreshing) {
             Log.w("ANNA", "Set loading");
             adapter.setLoading(true);
         }
-        loaderManager.initLoader(DOC_LOADER, null, this);
+        loaderManager.restartLoader(DOC_LOADER, null, this);
+        //loaderManager.initLoader(DOC_LOADER, null, this);
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         Uri docConstUri = DocsContract.DocumentEntry.buildDocConstUri();
+        Log.w("ANNA", "on create loader");
         if (i == DOC_LOADER) {
             return new CursorLoader(context,
                     docConstUri,
@@ -65,14 +72,19 @@ public class MyDocsLoader implements CustomLoader, LoaderManager.LoaderCallbacks
 
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         updateAdapterState();
-        adapter.swapCursor(data);
+        List<MyVKApiDocument> documents = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            documents.add(new MyVKApiDocument(cursor));
+        }
+        Log.w("ANNA", "finish: " + documents.size());
+        adapter.swapData(documents);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        adapter.swapCursor(null);
+        adapter.swapData(null);
     }
 
     private void updateAdapterState() {

@@ -4,13 +4,13 @@ package com.example.shustrik.vkdocs.loaders;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 
-import com.example.shustrik.vkdocs.adapters.SpecDocListAdapter;
+import com.example.shustrik.vkdocs.adapters.DocListAdapter;
 import com.example.shustrik.vkdocs.vk.MyVKDocsAttachments;
 import com.example.shustrik.vkdocs.vk.VKRequestCallback;
 import com.example.shustrik.vkdocs.vk.VKRequests;
 import com.vk.sdk.api.VKError;
 
-public class DialogDocsLoader implements CustomLoader, SpecDocListAdapter.LoadMore {
+public class DialogDocsLoader implements CustomLoader, DocListAdapter.LoadMore {
     public static String TAG = "ANNA_DDL";
 
     private String startFrom = "";
@@ -19,9 +19,9 @@ public class DialogDocsLoader implements CustomLoader, SpecDocListAdapter.LoadMo
     private boolean isRefreshing = false;
     private SwipeRefreshLayout swipe;
 
-    private SpecDocListAdapter adapter;
+    private DocListAdapter adapter;
 
-    public DialogDocsLoader(SpecDocListAdapter adapter, int peerId, SwipeRefreshLayout swipe) {
+    public DialogDocsLoader(DocListAdapter adapter, int peerId, SwipeRefreshLayout swipe) {
         this.adapter = adapter;
         adapter.setLoadMore(this);
         this.peerId = peerId;

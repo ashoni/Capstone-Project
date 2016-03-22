@@ -11,6 +11,7 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -23,14 +24,15 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.shustrik.vkdocs.adapters.CursorDocListAdapter;
+import com.example.shustrik.vkdocs.adapters.CustomAdapter;
+import com.example.shustrik.vkdocs.adapters.DocListAdapter;
 import com.example.shustrik.vkdocs.adapters.VKEntityListAdapter;
-import com.example.shustrik.vkdocs.adapters.SpecDocListAdapter;
 import com.example.shustrik.vkdocs.download.DefaultDownloader;
-import com.example.shustrik.vkdocs.download.DocDownloader;
+import com.example.shustrik.vkdocs.download.DocDownloaderHolder;
 import com.example.shustrik.vkdocs.fragments.MainActivityFragment;
 import com.example.shustrik.vkdocs.loaders.CommunitiesLoader;
 import com.example.shustrik.vkdocs.loaders.CommunityDocsLoader;
+import com.example.shustrik.vkdocs.loaders.CustomLoader;
 import com.example.shustrik.vkdocs.loaders.DialogDocsLoader;
 import com.example.shustrik.vkdocs.loaders.DialogsLoader;
 import com.example.shustrik.vkdocs.loaders.MyDocsLoader;
@@ -49,14 +51,14 @@ import butterknife.ButterKnife;
 
 /**
  * Разобраться, как syncadapter оповещает активити
- * <p/>
+ * <p>
  * Если что, navigation проверять здесь:
  * http://www.android4devs.com/2015/06/navigation-view-material-design-support.html
  * Проверить по
  * https://www.google.com/design/spec/patterns/navigation-drawer.html#
  */
 public class MainActivity extends AppCompatActivity implements SelectCallback,
-        ActivityCompat.OnRequestPermissionsResultCallback{
+        ActivityCompat.OnRequestPermissionsResultCallback {
     private SharedPreferences prefs;
 
     @Bind(R.id.toolbar)
@@ -86,6 +88,9 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
     public static final String USER_ID = "user_id";
     public static final String PREFS = "settings";
     public static final String TAG = "ANNA_MainActivity";
+
+    private static int dialogPeer = -1;
+    private static int communityPeer = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -167,79 +172,97 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
         updateUsername(prefs.getString(USER_FNAME, ""), prefs.getString(USER_LNAME, ""));
 
         mSwipeRefreshLayout.setColorSchemeColors(R.color.blue, R.color.orange, R.color.purple, R.color.green);
+
+        DocDownloaderHolder.attach(this);
+    }
+
+    @Override
+    protected void onStop() {
+        DocDownloaderHolder.detach();
+        super.onStop();
     }
 
     private MainActivityFragment getMyDocsFragment() {
-        DocDownloader docDownloader = new DocDownloader(this);
-        CursorDocListAdapter adapter = new CursorDocListAdapter(this, docDownloader, R.menu.my_docs_options);
-        return MainActivityFragment.getInstance(
-                adapter,
-                new MyDocsLoader(this, getSupportLoaderManager(), adapter, mSwipeRefreshLayout),
-                docDownloader,
-                false,
-                "No documents found",
-                "Loading documents..."
-        );
+        return MainActivityFragment.getInstance(MY_DOCS, false, "No documents found",
+                "Loading documents...");
     }
 
-    private MainActivityFragment getDialogDocsFragment(int peerId) {
-        DocDownloader docDownloader = new DocDownloader(this);
-        SpecDocListAdapter adapter = new SpecDocListAdapter(this, docDownloader, R.menu.dialog_docs_options);
-        return MainActivityFragment.getInstance(
-                adapter,
-                new DialogDocsLoader(adapter, peerId, mSwipeRefreshLayout),
-                docDownloader,
-                true,
-                "No documents found",
-                "Loading documents..."
-        );
+    private MainActivityFragment getDialogDocsFragment() {
+        return MainActivityFragment.getInstance(DIALOG_DOCS, true, "No documents found",
+                "Loading documents...");
     }
 
     private MainActivityFragment getDialogsFragment() {
+        return MainActivityFragment.getInstance(DIALOGS, false, "No dialogs found",
+                "Loading dialogs...");
+    }
+
+    private MainActivityFragment getCommunitiesFragment() {
+        return MainActivityFragment.getInstance(COMMUNITIES, false, "No communities found",
+                "Loading communities...");
+    }
+
+    private MainActivityFragment getCommunityDocsFragment() {
+        return MainActivityFragment.getInstance(COMMUNITY_DOCS, true, "No documents found",
+                "Loading documents...");
+    }
+
+    public Pair<CustomAdapter, CustomLoader> createAdapterAndLoader(int t) {
+        switch (t) {
+            case MY_DOCS:
+                return getMyDocsAdapterAndLoader();
+            case DIALOGS:
+                return getDialogsAdapterAndLoader();
+            case DIALOG_DOCS:
+                return getDialogDocsAdapterAndLoader();
+            case COMMUNITIES:
+                return getCommunityDocsAdapterAndLoader();
+            case COMMUNITY_DOCS:
+                return getCommunityDocsAdapterAndLoader();
+            default:
+                return null;
+        }
+    }
+
+    private Pair<CustomAdapter, CustomLoader> getMyDocsAdapterAndLoader() {
+        //CursorDocListAdapter adapter = new CursorDocListAdapter(this, R.menu.my_docs_options, MY_DOCS);
+        DocListAdapter adapter = new DocListAdapter(this, R.menu.my_docs_options, MY_DOCS);
+        CustomLoader loader = new MyDocsLoader(this, getSupportLoaderManager(), adapter, mSwipeRefreshLayout);
+        return new Pair<>((CustomAdapter) adapter, loader);
+    }
+
+    private Pair<CustomAdapter, CustomLoader> getDialogsAdapterAndLoader() {
         VKEntityListAdapter adapter = new VKEntityListAdapter(this, new VKEntityListAdapter.OnClickHandler() {
             @Override
             public void onClick(VKEntityListAdapter.DialogViewHolder vh) {
                 onDialogSelected(vh.getPeerId());
             }
         });
-        return MainActivityFragment.getInstance(
-                adapter,
-                new DialogsLoader(adapter, mSwipeRefreshLayout),
-                null,
-                false,
-                "No dialogs found",
-                "Loading dialogs..."
-        );
+        CustomLoader loader = new DialogsLoader(adapter, mSwipeRefreshLayout);
+        return new Pair<>((CustomAdapter) adapter, loader);
     }
 
-    private MainActivityFragment getCommunitiesFragment() {
+    private Pair<CustomAdapter, CustomLoader> getCommunitiesAdapterAndLoader() {
         VKEntityListAdapter adapter = new VKEntityListAdapter(this, new VKEntityListAdapter.OnClickHandler() {
             @Override
             public void onClick(VKEntityListAdapter.DialogViewHolder vh) {
                 onCommunitySelected(vh.getPeerId());
             }
         });
-        return MainActivityFragment.getInstance(
-                adapter,
-                new CommunitiesLoader(adapter, mSwipeRefreshLayout),
-                null,
-                false,
-                "No communities found",
-                "Loading communities..."
-        );
+        CustomLoader loader = new CommunitiesLoader(adapter, mSwipeRefreshLayout);
+        return new Pair<>((CustomAdapter) adapter, loader);
     }
 
-    private MainActivityFragment getCommunityDocsFragment(int peerId) {
-        DocDownloader docDownloader = new DocDownloader(this);
-        SpecDocListAdapter adapter = new SpecDocListAdapter(this, docDownloader, R.menu.community_docs_options);
-        return MainActivityFragment.getInstance(
-                adapter,
-                new CommunityDocsLoader(adapter, peerId, mSwipeRefreshLayout),
-                docDownloader,
-                true,
-                "No documents found",
-                "Loading documents..."
-        );
+    private Pair<CustomAdapter, CustomLoader> getDialogDocsAdapterAndLoader() {
+        DocListAdapter adapter = new DocListAdapter(this, R.menu.dialog_docs_options, DIALOG_DOCS);
+        CustomLoader loader = new DialogDocsLoader(adapter, dialogPeer, mSwipeRefreshLayout);
+        return new Pair<>((CustomAdapter) adapter, loader);
+    }
+
+    private Pair<CustomAdapter, CustomLoader> getCommunityDocsAdapterAndLoader() {
+        DocListAdapter adapter = new DocListAdapter(this, R.menu.community_docs_options, COMMUNITY_DOCS);
+        CustomLoader loader = new CommunityDocsLoader(adapter, communityPeer, mSwipeRefreshLayout);
+        return new Pair<>((CustomAdapter) adapter, loader);
     }
 
     @Override
@@ -338,12 +361,14 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
 
     @Override
     public void onDialogSelected(int peerId) {
-        setFragment(getDialogDocsFragment(peerId), false);
+        dialogPeer = peerId;
+        setFragment(getDialogDocsFragment(), false);
     }
 
     @Override
     public void onCommunitySelected(int peerId) {
-        setFragment(getCommunityDocsFragment(peerId), false);
+        communityPeer = peerId;
+        setFragment(getCommunityDocsFragment(), false);
     }
 
     public void snack(String text, int length) {
@@ -364,4 +389,10 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
             }
         }
     }
+
+    public static final int MY_DOCS = 0;
+    public static final int DIALOGS = 1;
+    public static final int COMMUNITIES = 2;
+    public static final int DIALOG_DOCS = 3;
+    public static final int COMMUNITY_DOCS = 4;
 }

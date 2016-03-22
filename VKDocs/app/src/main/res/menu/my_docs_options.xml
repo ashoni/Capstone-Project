@@ -22,8 +22,7 @@
         <item
             android:id="@+id/doc_offline"
             android:icon="@drawable/ic_offline_pin_black_24dp"
-            app:actionLayout="@layout/switch_layout"
-            app:showAsAction="always"
+            android:checkable="true"
             android:title="Available offline" />
         <item
             android:id="@+id/doc_rename"

@@ -81,6 +81,7 @@ public class DownloadService extends IntentService {
             output.close();
             input.close();
         } catch (IOException e) {
+            //RECEIVER SEND FAIL
             e.printStackTrace();
         }
         Log.w("ANNA", "cancel here");

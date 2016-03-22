@@ -10,6 +10,7 @@ import com.example.shustrik.vkdocs.vk.VKRequestCallback;
 import com.example.shustrik.vkdocs.vk.VKRequests;
 import com.vk.sdk.api.VKError;
 
+import java.io.File;
 import java.util.Vector;
 
 public class DocUtils {
@@ -77,6 +78,31 @@ public class DocUtils {
 
     public static void exportToDropBox() {
 
+    }
+
+    public static void setTempAvailable(Context context, int docId, File f) {
+        ContentValues cv = new ContentValues();
+        cv.put(DocsContract.FileEntry._ID, docId);
+        cv.put(DocsContract.FileEntry.COLUMN_OFFLINE, 0);
+        cv.put(DocsContract.FileEntry.COLUMN_LAST, System.currentTimeMillis() / 1000);
+        cv.put(DocsContract.FileEntry.COLUMN_NAME, f.getName());
+        context.getContentResolver().insert(DocsContract.FileEntry.CONTENT_URI, cv);
+    }
+
+    public static void setOfflineAvailable(Context context, int docId, File f) {
+        ContentValues cv = new ContentValues();
+        cv.put(DocsContract.FileEntry._ID, docId);
+        cv.put(DocsContract.FileEntry.COLUMN_OFFLINE, 1);
+        cv.put(DocsContract.FileEntry.COLUMN_LAST, System.currentTimeMillis() / 1000);
+        cv.put(DocsContract.FileEntry.COLUMN_NAME, f.getName());
+        context.getContentResolver().insert(DocsContract.FileEntry.CONTENT_URI, cv);
+    }
+
+    public static void setOfflineUnavailable(Context context, int docId) {
+        ContentValues cv = new ContentValues();
+        cv.put(DocsContract.FileEntry.COLUMN_OFFLINE, 0);
+        context.getContentResolver().update(DocsContract.FileEntry.CONTENT_URI,
+                cv, DocsContract.FileEntry._ID + "=" + docId, null);
     }
 
     public interface RequestCallback {

@@ -5,7 +5,7 @@ import android.os.Handler;
 import android.os.ResultReceiver;
 
 
-public class DownloadReceiver extends ResultReceiver {
+class DownloadReceiver extends ResultReceiver {
     private DownloadCallback callback;
     private int docId;
 
@@ -23,7 +23,7 @@ public class DownloadReceiver extends ResultReceiver {
             callback.onDownloadProgress(docId, resultData.getInt(DownloadService.PROGRESS));
         } else if (resultCode == DownloadService.NOTIFY_READY) {
             callback.onDownloadSuccess(docId);
-        } else {
+        } else if (resultCode == DownloadService.NOTIFY_CANCELLED){
             callback.onDownloadFail(docId);
         }
     }
