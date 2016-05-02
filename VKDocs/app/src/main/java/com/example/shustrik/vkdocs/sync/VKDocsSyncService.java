@@ -12,7 +12,6 @@ public class VKDocsSyncService extends Service {
 
     @Override
     public void onCreate() {
-        Log.d("VKDocsSyncService", "onCreate - VKDocsSyncService");
         synchronized (sSyncAdapterLock) {
             if (sSunshineSyncAdapter == null) {
                 sSunshineSyncAdapter = new VKDocsSyncAdapter(getApplicationContext(), true);

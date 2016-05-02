@@ -17,4 +17,6 @@
     <string name="dialogs_docs">Dialogs</string>
     <string name="group_docs">Community documents</string>
     <string name="global_docs">Global documents</string>
+    <string name="app_label">VKSearchDocs</string>
+    <string name="search_hint">Search</string>
 </resources>

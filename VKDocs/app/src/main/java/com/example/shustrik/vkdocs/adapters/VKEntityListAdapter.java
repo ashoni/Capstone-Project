@@ -29,10 +29,24 @@ public class VKEntityListAdapter extends RecyclerView.Adapter<VKEntityListAdapte
     private OnClickHandler handler;
     private RecyclerView recyclerView;
 
+    private boolean loadFinished = false;
+    private boolean loadingInProgress = false;
+    private int loadingThreshold = 3;
+    private LoadMore loadMore;
+
 
     public VKEntityListAdapter(Context context, OnClickHandler handler) {
         this.context = context;
         this.handler = handler;
+    }
+
+    public void setLoadMore(LoadMore loadMore) {
+        this.loadMore = loadMore;
+    }
+
+    @Override
+    public void onRefreshFailed() {
+        //activity snack
     }
 
     @Override
@@ -73,6 +87,22 @@ public class VKEntityListAdapter extends RecyclerView.Adapter<VKEntityListAdapte
         this.recyclerView = recyclerView;
     }
 
+    private synchronized void load(int position) {
+        if (loadMore != null && !loadFinished && !loadingInProgress && position >= getItemCount() - loadingThreshold) {
+            loadingInProgress = true;
+            loadMore.load();
+        }
+    }
+
+    public void notifyLoadingComplete() {
+        loadingInProgress = false;
+    }
+
+
+    public void notifyLoadFinished() {
+        loadFinished = true;
+    }
+
     @Override
     public DialogViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         if (parent instanceof RecyclerView) {
@@ -99,6 +129,9 @@ public class VKEntityListAdapter extends RecyclerView.Adapter<VKEntityListAdapte
         } else {
             holder.preview.setImageResource(DocIcons.getChatIcon());
         }
+
+        if (!loadFinished && (position >= getItemCount() - loadingThreshold))
+            load(position);
     }
 
     @Override
@@ -143,6 +176,10 @@ public class VKEntityListAdapter extends RecyclerView.Adapter<VKEntityListAdapte
 
         public int getPeerId() {
             return peerId;
+        }
+
+        public CharSequence getName() {
+            return username.getText();
         }
     }
 }

@@ -54,22 +54,27 @@ public class DocsDBHelper extends SQLiteOpenHelper {
 
         final String SQL_CREATE_GROUP_TABLE = "CREATE TABLE " + CommunityEntry.TABLE_NAME + " (" +
                 CommunityEntry._ID + " INTEGER PRIMARY KEY," +
-                CommunityEntry.COLUMN_TITLE + " TEXT NOT NULL " +
-                CommunityEntry.COLUMN_PREVIEW_URL + " TEXT NOT NULL " +
-                CommunityEntry.COLUMN_DATE + " INTEGER NOT NULL" +
+                CommunityEntry.COLUMN_TITLE + " TEXT NOT NULL, " +
+                CommunityEntry.COLUMN_PREVIEW_URL + " TEXT NOT NULL, " +
+                CommunityEntry.COLUMN_DATE + " INTEGER NOT NULL," +
+                CommunityEntry.COLUMN_OWNER_ID + " INTEGER NOT NULL" +
                 " );";
 
         final String SQL_CREATE_DIALOG_TABLE = "CREATE TABLE " + DialogEntry.TABLE_NAME + " (" +
                 DialogEntry._ID + " INTEGER PRIMARY KEY," +
                 DialogEntry.COLUMN_TITLE + " TEXT NOT NULL," +
                 DialogEntry.COLUMN_PEOPLE + " TEXT NOT NULL," +
-                DialogEntry.COLUMN_PREVIEW_URL + " TEXT NOT NULL," +
-                DialogEntry.COLUMN_DATE + " INTEGER NOT NULL" +
+                DialogEntry.COLUMN_PREVIEW_URL + " TEXT," +
+                DialogEntry.COLUMN_DATE + " INTEGER NOT NULL," +
+                DialogEntry.COLUMN_PEER_ID + " INTEGER NOT NULL," +
+                DialogEntry.COLUMN_OWNER_ID + " INTEGER NOT NULL" +
                 " );";
 
         db.execSQL(SQL_CREATE_USER_TABLE);
         db.execSQL(SQL_CREATE_FILE_TABLE);
         db.execSQL(SQL_CREATE_DOCUMENT_TABLE);
+        db.execSQL(SQL_CREATE_GROUP_TABLE);
+        db.execSQL(SQL_CREATE_DIALOG_TABLE);
     }
 
     @Override
@@ -77,6 +82,8 @@ public class DocsDBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + DocumentEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + UserEntry.TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + FileEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + DialogEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + CommunityEntry.TABLE_NAME);
         onCreate(db);
     }
 }

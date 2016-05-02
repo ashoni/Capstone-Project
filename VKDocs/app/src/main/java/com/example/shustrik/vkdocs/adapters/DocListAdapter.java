@@ -58,6 +58,12 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
         this.menuId = menuId;
     }
 
+    @Override
+    public void onRefreshFailed() {
+        //activity snack
+    }
+
+
     public void onRemoved(int position) {
         documents.remove(position);
         notifyItemRemoved(position);
@@ -240,12 +246,18 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
 
 
     public void addData(List<MyVKApiDocument> newDocuments) {
-        if (documents == null) {
+        if (documents == null || documents.isEmpty()) {
+            Log.w("ANNA", "empty");
             documents = new ArrayList<>();
+            documents.addAll(newDocuments);
+            Log.w("ANNA", documents.size() + " ");
+            notifyDataSetChanged();
+        } else {
+            Log.w("ANNA", "real size" + documents.size());
+            int start = documents.size();
+            documents.addAll(newDocuments);
+            notifyItemRangeInserted(start, newDocuments.size());
         }
-        int start = documents.size();
-        documents.addAll(newDocuments);
-        notifyItemRangeInserted(start, newDocuments.size());
     }
 
 
@@ -267,15 +279,11 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
 
 
     public void swapData(List<MyVKApiDocument> documents) {
+        Log.w("ANNA", "swap");
         this.documents = documents;
         notifyDataSetChanged();
         recyclerView.setVisibility(getItemCount() != 0 && !loading ? View.VISIBLE : View.GONE);
         emptyView.setVisibility(getItemCount() == 0 && !loading ? View.VISIBLE : View.GONE);
-    }
-
-
-    public interface LoadMore {
-        void load();
     }
 
     public class DocViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -301,7 +309,6 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
         public DocViewHolder(View view, int menuId) {
             super(view);
             ButterKnife.bind(this, view);
-            Log.w("ANNA", "here");
             docMenu = new DocMenu(activity, recyclerView, docDownloader, menuId);
             overflow.setOnClickListener(new View.OnClickListener() {
                 @Override

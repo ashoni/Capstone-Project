@@ -2,11 +2,13 @@ package com.example.shustrik.vkdocs.menus;
 
 import android.app.Activity;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -86,12 +88,20 @@ class MenuAdapter extends ArrayAdapter<MenuItem> {
             if (isCheckable) {
 //                offlineHolder = this;
                 checkableSwitch.setVisibility(View.VISIBLE);
+                checkableSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        Log.w("ANNA", "On checked " + isChecked);
+                        listener.onClick(menuId, isChecked);
+                    }
+                });
+
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         isOffline = !isOffline;
                         checkableSwitch.setChecked(isOffline);
-                        listener.onClick(menuId, isOffline);
+//                        listener.onClick(menuId, isOffline);
                     }
                 });
             } else {

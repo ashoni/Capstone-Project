@@ -3,7 +3,9 @@ package com.example.shustrik.vkdocs.common;
 import android.content.ContentValues;
 
 import com.example.shustrik.vkdocs.data.DocsContract;
+import com.example.shustrik.vkdocs.vk.MyVKApiDialog;
 import com.example.shustrik.vkdocs.vk.MyVKApiDocument;
+import com.vk.sdk.api.model.VKApiCommunity;
 
 public class DBConverter {
     public static final String[] DOC_CONST_COLUMNS = {
@@ -47,6 +49,25 @@ public class DBConverter {
     public static final int COL_FILE_LAST = 2;
     public static final int COL_FILE_OFFLINE = 3;
 
+    public static final String[] GROUP_COLUMNS = {
+            DocsContract.CommunityEntry.TABLE_NAME + "." + DocsContract.CommunityEntry._ID,
+            DocsContract.CommunityEntry.COLUMN_TITLE,
+            DocsContract.CommunityEntry.COLUMN_PREVIEW_URL
+    };
+
+    public static final int COL_GROUP_ID = 0;
+    public static final int COL_GROUP_TITLE = 1;
+    public static final int COL_GROUP_PREVIEW = 2;
+
+    public static final String[] DIALOG_COLUMNS = {
+            DocsContract.DialogEntry.COLUMN_PEER_ID,
+            DocsContract.DialogEntry.COLUMN_TITLE,
+            DocsContract.DialogEntry.COLUMN_PREVIEW_URL
+    };
+
+    public static final int COL_DIALOG_PEER_ID = 0;
+    public static final int COL_DIALOG_TITLE = 1;
+    public static final int COL_DIALOG_PREVIEW = 2;
 
     //Использовать при синхронизации
     public static ContentValues parseIntoValues(MyVKApiDocument doc) {
@@ -65,5 +86,27 @@ public class DBConverter {
             docsValues.put(DocsContract.DocumentEntry.COLUMN_PREVIEW_URL, doc.photo_100);
         }
         return docsValues;
+    }
+
+    public static ContentValues parseIntoValues(VKApiCommunity community, int ownerId) {
+        ContentValues communityValues = new ContentValues();
+        communityValues.put(DocsContract.CommunityEntry._ID, community.id);
+        communityValues.put(DocsContract.CommunityEntry.COLUMN_DATE, 0);
+        communityValues.put(DocsContract.CommunityEntry.COLUMN_TITLE, community.name);
+        communityValues.put(DocsContract.CommunityEntry.COLUMN_OWNER_ID, ownerId);
+        communityValues.put(DocsContract.CommunityEntry.COLUMN_PREVIEW_URL, community.photo_200);
+        return communityValues;
+    }
+
+    public static ContentValues parseIntoValues(MyVKApiDialog dialog, int ownerId) {
+        ContentValues communityValues = new ContentValues();
+        communityValues.put(DocsContract.DialogEntry._ID, dialog.getId());
+        communityValues.put(DocsContract.DialogEntry.COLUMN_DATE, dialog.message.date);
+        communityValues.put(DocsContract.DialogEntry.COLUMN_OWNER_ID, ownerId);
+        communityValues.put(DocsContract.DialogEntry.COLUMN_TITLE, dialog.getPeerName());
+        communityValues.put(DocsContract.DialogEntry.COLUMN_PREVIEW_URL, dialog.getPreviewUrl());
+        communityValues.put(DocsContract.DialogEntry.COLUMN_PEOPLE, dialog.getPeerIds().toString());
+        communityValues.put(DocsContract.DialogEntry.COLUMN_PEER_ID, dialog.getPeerId());
+        return communityValues;
     }
 }

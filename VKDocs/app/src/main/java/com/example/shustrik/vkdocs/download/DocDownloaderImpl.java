@@ -143,6 +143,9 @@ class DocDownloaderImpl implements DownloadCallback, DocDownloader {
             openListener.releaseOpening(docId);
             openingDocId = -1;
         }
+        if (dp != null && dp.getGoal() == DownloadPack.GOAL.SAVE_TO_OFFLINE) {
+            DocNotificationManager.dismissNotification(activity, docId);
+        }
         downloadPackMap.remove(docId);
     }
 
@@ -193,6 +196,7 @@ class DocDownloaderImpl implements DownloadCallback, DocDownloader {
         if (!downloadPackMap.containsKey(docId)) {
             initDownload(docId, new DownloadPack(DownloadPack.GOAL.SAVE_TO_OFFLINE));
             startAndBindDownloadService(docId, createDownloadIntent(url, title, docId));
+            DocNotificationManager.createNotification(activity, title, docId);
         }
     }
 }

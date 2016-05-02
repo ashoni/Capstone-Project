@@ -9,10 +9,10 @@
     <ImageView
         android:id="@+id/dialog_preview"
         android:adjustViewBounds="true"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:maxHeight="@dimen/preview_size"
-        android:maxWidth="@dimen/preview_size"
+        android:layout_height="@dimen/preview_size"
+        android:layout_width="@dimen/preview_size"
+        android:height="@dimen/preview_size"
+        android:width="@dimen/preview_size"
         android:layout_margin="@dimen/doc_list_item_margin"
         android:src="@drawable/ic_image_black_24dp"
         android:layout_gravity="center"/>

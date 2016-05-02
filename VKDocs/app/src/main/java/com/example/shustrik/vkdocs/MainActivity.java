@@ -1,5 +1,6 @@
 package com.example.shustrik.vkdocs;
 
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -10,8 +11,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -19,8 +20,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +38,7 @@ import com.example.shustrik.vkdocs.loaders.CommunityDocsLoader;
 import com.example.shustrik.vkdocs.loaders.CustomLoader;
 import com.example.shustrik.vkdocs.loaders.DialogDocsLoader;
 import com.example.shustrik.vkdocs.loaders.DialogsLoader;
+import com.example.shustrik.vkdocs.loaders.GlobalLoader;
 import com.example.shustrik.vkdocs.loaders.MyDocsLoader;
 import com.example.shustrik.vkdocs.sync.VKDocsSyncAdapter;
 import com.example.shustrik.vkdocs.vk.VKRequestCallback;
@@ -59,38 +63,43 @@ import butterknife.ButterKnife;
  */
 public class MainActivity extends AppCompatActivity implements SelectCallback,
         ActivityCompat.OnRequestPermissionsResultCallback {
-    private SharedPreferences prefs;
-
-    @Bind(R.id.toolbar)
-    Toolbar toolbar;
-
-    @Bind(R.id.fab)
-    FloatingActionButton fab;
-
-    @Bind(R.id.drawer_layout)
-    DrawerLayout drawerLayout;
-
-    @Bind(R.id.navigation_view)
-    NavigationView navigationView;
-
-    @Bind(R.id.coordinatorLayout)
-    CoordinatorLayout coordinatorLayout;
-    @Bind(R.id.swipe_refresh_layout)
-    SwipeRefreshLayout mSwipeRefreshLayout;
-
-    TextView username;
-
-    private ActionBarDrawerToggle actionBarDrawerToggle;
-
-
     public static final String USER_FNAME = "first_name";
     public static final String USER_LNAME = "last_name";
     public static final String USER_ID = "user_id";
     public static final String PREFS = "settings";
     public static final String TAG = "ANNA_MainActivity";
-
+    public static final int MY_DOCS = 0;
+    public static final int DIALOGS = 1;
+    public static final int COMMUNITIES = 2;
+    public static final int DIALOG_DOCS = 3;
+    public static final int COMMUNITY_DOCS = 4;
+    public static final int GLOBAL = 5;
+    private static MainActivityFragment curFragment;
     private static int dialogPeer = -1;
     private static int communityPeer = -1;
+    @Bind(R.id.toolbar)
+    Toolbar toolbar;
+    @Bind(R.id.fab)
+    FloatingActionButton fab;
+    @Bind(R.id.drawer_layout)
+    DrawerLayout drawerLayout;
+    @Bind(R.id.navigation_view)
+    NavigationView navigationView;
+    @Bind(R.id.coordinatorLayout)
+    CoordinatorLayout coordinatorLayout;
+    @Bind(R.id.swipe_refresh_layout)
+    SwipeRefreshLayout mSwipeRefreshLayout;
+    TextView username;
+
+
+//    @Override
+//    protected void onStop() {
+//        DocDownloaderHolder.detach();
+//        super.onStop();
+//    }
+    private SharedPreferences prefs;
+    private ActionBarDrawerToggle actionBarDrawerToggle;
+    private long userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +112,8 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
                     VKScopes.FRIENDS.getName(),
                     VKScopes.GROUPS.getName(),
                     VKScopes.MESSAGES.getName());
+        } else {
+            userId = prefs.getInt(USER_ID, -1);
         }
 
         setContentView(R.layout.activity_main);
@@ -132,16 +143,19 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
                 switch (menuItem.getItemId()) {
                     default:
                     case R.id.my_docs:
+                        toolbar.setTitle("My Documents");
                         setFragment(getMyDocsFragment(), true);
                         return true;
                     case R.id.dialogs_docs:
+                        toolbar.setTitle("Dialog Documents");
                         setFragment(getDialogsFragment(), false);
                         return true;
                     case R.id.group_docs:
+                        toolbar.setTitle("Community Documents");
                         setFragment(getCommunitiesFragment(), false);
                         return true;
                     case R.id.global_docs:
-                        Toast.makeText(getApplicationContext(), "Global", Toast.LENGTH_SHORT).show();
+                        setFragment(getGlobalFragment(), false);
                         return true;
                 }
             }
@@ -174,12 +188,32 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
         mSwipeRefreshLayout.setColorSchemeColors(R.color.blue, R.color.orange, R.color.purple, R.color.green);
 
         DocDownloaderHolder.attach(this);
+
+        handleIntent(getIntent());
     }
 
     @Override
-    protected void onStop() {
-        DocDownloaderHolder.detach();
-        super.onStop();
+    protected void onNewIntent(Intent intent) {
+        setIntent(intent);
+        handleIntent(intent);
+    }
+
+    private void handleIntent(Intent intent) {
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            Log.w("ANNA", "Search ction");
+            doMySearch(query);
+        }
+    }
+
+    private void doMySearch(String query) {
+        curFragment.search(query);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        DocDownloaderHolder.attach(this);
     }
 
     private MainActivityFragment getMyDocsFragment() {
@@ -202,6 +236,11 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
                 "Loading communities...");
     }
 
+    private MainActivityFragment getGlobalFragment() {
+        return MainActivityFragment.getInstance(GLOBAL, false, "No communities found",
+                "Loading communities...");
+    }
+
     private MainActivityFragment getCommunityDocsFragment() {
         return MainActivityFragment.getInstance(COMMUNITY_DOCS, true, "No documents found",
                 "Loading documents...");
@@ -216,9 +255,11 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
             case DIALOG_DOCS:
                 return getDialogDocsAdapterAndLoader();
             case COMMUNITIES:
-                return getCommunityDocsAdapterAndLoader();
+                return getCommunitiesAdapterAndLoader();
             case COMMUNITY_DOCS:
                 return getCommunityDocsAdapterAndLoader();
+            case GLOBAL:
+                return getGlobalDocsAdapterAndLoader();
             default:
                 return null;
         }
@@ -227,7 +268,7 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
     private Pair<CustomAdapter, CustomLoader> getMyDocsAdapterAndLoader() {
         //CursorDocListAdapter adapter = new CursorDocListAdapter(this, R.menu.my_docs_options, MY_DOCS);
         DocListAdapter adapter = new DocListAdapter(this, R.menu.my_docs_options, MY_DOCS);
-        CustomLoader loader = new MyDocsLoader(this, getSupportLoaderManager(), adapter, mSwipeRefreshLayout);
+        CustomLoader loader = MyDocsLoader.initAndGetInstance(this, adapter, mSwipeRefreshLayout, getSupportLoaderManager());
         return new Pair<>((CustomAdapter) adapter, loader);
     }
 
@@ -235,10 +276,10 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
         VKEntityListAdapter adapter = new VKEntityListAdapter(this, new VKEntityListAdapter.OnClickHandler() {
             @Override
             public void onClick(VKEntityListAdapter.DialogViewHolder vh) {
-                onDialogSelected(vh.getPeerId());
+                onDialogSelected(vh.getPeerId(), vh.getName());
             }
         });
-        CustomLoader loader = new DialogsLoader(adapter, mSwipeRefreshLayout);
+        CustomLoader loader = DialogsLoader.initAndGetInstance(this, adapter, mSwipeRefreshLayout, getSupportLoaderManager(), userId);
         return new Pair<>((CustomAdapter) adapter, loader);
     }
 
@@ -246,10 +287,10 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
         VKEntityListAdapter adapter = new VKEntityListAdapter(this, new VKEntityListAdapter.OnClickHandler() {
             @Override
             public void onClick(VKEntityListAdapter.DialogViewHolder vh) {
-                onCommunitySelected(vh.getPeerId());
+                onCommunitySelected(vh.getPeerId(), vh.getName());
             }
         });
-        CustomLoader loader = new CommunitiesLoader(adapter, mSwipeRefreshLayout);
+        CustomLoader loader = CommunitiesLoader.initAndGetInstance(this, adapter, mSwipeRefreshLayout, getSupportLoaderManager(), userId);
         return new Pair<>((CustomAdapter) adapter, loader);
     }
 
@@ -265,18 +306,24 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
         return new Pair<>((CustomAdapter) adapter, loader);
     }
 
+
+    private Pair<CustomAdapter, CustomLoader> getGlobalDocsAdapterAndLoader() {
+        DocListAdapter adapter = new DocListAdapter(this, R.menu.global_docs_options, COMMUNITY_DOCS);
+        CustomLoader loader = new GlobalLoader(adapter, communityPeer, mSwipeRefreshLayout);
+        return new Pair<>((CustomAdapter) adapter, loader);
+    }
+
     @Override
     public void setToggleListener(boolean state) {
         actionBarDrawerToggle.setDrawerIndicatorEnabled(state);
     }
 
-
-    private void setFragment(Fragment fragment, boolean isFab) {
+    private void setFragment(MainActivityFragment fragment, boolean isFab) {
         setFragment(fragment, isFab, null);
     }
 
-
-    private void setFragment(Fragment fragment, boolean isFab, String backStackName) {
+    private void setFragment(MainActivityFragment fragment, boolean isFab, String backStackName) {
+        curFragment = fragment;
         if (isFab) {
             fab.setVisibility(View.VISIBLE);
         } else {
@@ -288,11 +335,36 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
                 .commit();
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+
+        // Get the SearchView and set the searchable configuration
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+
+        // Assumes current activity is the searchable activity
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        searchView.setIconifiedByDefault(false); // Do not iconify the widget; expand it by default
+
+        final MenuItem searchMI = menu.findItem(R.id.action_search);
+        MenuItemCompat.setOnActionExpandListener(searchMI,
+                new MenuItemCompat.OnActionExpandListener() {
+                    @Override
+                    public boolean onMenuItemActionExpand(MenuItem item) {
+                        Log.w("ANNA", "Expand");
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onMenuItemActionCollapse(MenuItem item) {
+                        Log.w("ANNA", "Collapse");
+                        curFragment.backToList();
+                        return true;
+                    }
+                });
+
         return true;
     }
 
@@ -341,6 +413,7 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
                             e.commit();
                             updateUsername(userInfo.first_name, userInfo.last_name);
                         }
+                        userId = userInfo.id;
                     }
 
                     @Override
@@ -360,14 +433,17 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
     }
 
     @Override
-    public void onDialogSelected(int peerId) {
+    public void onDialogSelected(int peerId, CharSequence name) {
+        Log.w("ANNA", "on dialog selected " + peerId);
         dialogPeer = peerId;
+        toolbar.setTitle(name);
         setFragment(getDialogDocsFragment(), false);
     }
 
     @Override
-    public void onCommunitySelected(int peerId) {
+    public void onCommunitySelected(int peerId, CharSequence name) {
         communityPeer = peerId;
+        toolbar.setTitle(name);
         setFragment(getCommunityDocsFragment(), false);
     }
 
@@ -389,10 +465,4 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
             }
         }
     }
-
-    public static final int MY_DOCS = 0;
-    public static final int DIALOGS = 1;
-    public static final int COMMUNITIES = 2;
-    public static final int DIALOG_DOCS = 3;
-    public static final int COMMUNITY_DOCS = 4;
 }

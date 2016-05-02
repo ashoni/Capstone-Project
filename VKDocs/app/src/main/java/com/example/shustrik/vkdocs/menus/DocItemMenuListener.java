@@ -47,6 +47,7 @@ class DocItemMenuListener {
         switch (menuId) {
             case R.id.doc_offline:
                 if (state) {
+                    Log.w("ANNA", "Noww "  + state);
                     docDownloader.processToOffline(url, title, docId);
                 } else {
                     docDownloader.onCancelPressed(docId);

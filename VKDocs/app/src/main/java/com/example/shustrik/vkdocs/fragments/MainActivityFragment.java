@@ -1,5 +1,6 @@
 package com.example.shustrik.vkdocs.fragments;
 
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
@@ -115,6 +116,7 @@ public class MainActivityFragment extends Fragment {
         Pair<CustomAdapter, CustomLoader> pair = ((MainActivity) getActivity()).createAdapterAndLoader(type);
         adapter = pair.first;
         loader = pair.second;
+        Log.w("ANNA", "loader == null " + (loader == null));
 
         adapter.setEmptyView(emptyView);
         adapter.bindRecyclerView(recyclerView);
@@ -130,6 +132,7 @@ public class MainActivityFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+//        Log.w("ANNA", "SAVE!! " + (adapter == null));
         // When tablets rotate, the currently selected list item needs to be saved.
         if (adapter != null) {
             adapter.onSaveInstanceState(outState);
@@ -143,8 +146,17 @@ public class MainActivityFragment extends Fragment {
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
+        Log.w("ANNA", "activity created");
         loader.initLoader();
         super.onActivityCreated(savedInstanceState);
+    }
+
+    public void search(String query) {
+        loader.search(query);
+    }
+
+    public void backToList() {
+        loader.cancelSearch();
     }
 }
 

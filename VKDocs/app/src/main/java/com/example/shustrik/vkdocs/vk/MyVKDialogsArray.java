@@ -1,6 +1,5 @@
 package com.example.shustrik.vkdocs.vk;
 
-import com.vk.sdk.api.model.VKApiDialog;
 import com.vk.sdk.api.model.VKApiModel;
 import com.vk.sdk.api.model.VKList;
 

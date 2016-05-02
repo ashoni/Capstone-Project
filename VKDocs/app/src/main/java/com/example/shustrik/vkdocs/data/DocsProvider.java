@@ -20,6 +20,10 @@ public class DocsProvider extends ContentProvider {
     static final int USERS = 200;
     static final int FILES = 300;
     static final int FILES_WITH_ID = 301;
+    static final int GROUPS_WITH_USER = 400;
+    static final int GROUPS = 401;
+    static final int DIALOGS_WITH_USER = 500;
+    static final int DIALOGS = 501;
 
 
     private static final String sDocIdSelection =
@@ -30,10 +34,20 @@ public class DocsProvider extends ContentProvider {
             DocsContract.DocumentEntry.TABLE_NAME+
                     "." + DocsContract.FileEntry._ID + " = ? ";
 
+    private static final String dialogOwnerSelection =
+            DocsContract.DialogEntry.TABLE_NAME+
+                    "." + DocsContract.DialogEntry.COLUMN_OWNER_ID + " = ? ";
+
+    private static final String groupOwnerSelection =
+            DocsContract.CommunityEntry.TABLE_NAME+
+                    "." + DocsContract.CommunityEntry.COLUMN_OWNER_ID + " = ? ";
+
 
     private static final SQLiteQueryBuilder docQueryBuilder;
     private static final SQLiteQueryBuilder fileQueryBuilder;
     private static final SQLiteQueryBuilder docConstQueryBuilder;
+    private static final SQLiteQueryBuilder groupsQueryBuilder;
+    private static final SQLiteQueryBuilder dialogsQueryBuilder;
 
     static {
         docQueryBuilder = new SQLiteQueryBuilder();
@@ -50,6 +64,12 @@ public class DocsProvider extends ContentProvider {
                         "." + DocsContract.DocumentEntry._ID +
                         " = " + DocsContract.FileEntry.TABLE_NAME +
                         "." + DocsContract.FileEntry._ID);
+
+        groupsQueryBuilder = new SQLiteQueryBuilder();
+        groupsQueryBuilder.setTables(DocsContract.CommunityEntry.TABLE_NAME);
+
+        dialogsQueryBuilder = new SQLiteQueryBuilder();
+        dialogsQueryBuilder.setTables(DocsContract.DialogEntry.TABLE_NAME);
     }
 
     @Override
@@ -133,7 +153,28 @@ public class DocsProvider extends ContentProvider {
                 );
                 break;
             }
-
+            case DIALOGS_WITH_USER: {
+                retCursor = dialogsQueryBuilder.query(mOpenHelper.getReadableDatabase(),
+                        projection,
+                        dialogOwnerSelection,
+                        new String[]{DocsContract.DialogEntry.getOwnerIdFromUri(uri)},
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+            }
+            case GROUPS_WITH_USER: {
+                retCursor = groupsQueryBuilder.query(mOpenHelper.getReadableDatabase(),
+                        projection,
+                        groupOwnerSelection,
+                        new String[]{DocsContract.CommunityEntry.getOwnerIdFromUri(uri)},
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+            }
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -159,6 +200,14 @@ public class DocsProvider extends ContentProvider {
                 return DocsContract.FileEntry.CONTENT_TYPE;
             case FILES_WITH_ID:
                 return DocsContract.FileEntry.CONTENT_ITEM_TYPE;
+            case GROUPS_WITH_USER:
+                return DocsContract.CommunityEntry.CONTENT_TYPE;
+            case GROUPS:
+                return DocsContract.CommunityEntry.CONTENT_TYPE;
+            case DIALOGS_WITH_USER:
+                return DocsContract.DialogEntry.COLUMN_TYPE;
+            case DIALOGS:
+                return DocsContract.DialogEntry.COLUMN_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -196,6 +245,22 @@ public class DocsProvider extends ContentProvider {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 break;
             }
+            case GROUPS: {
+                long _id = db.insert(DocsContract.CommunityEntry.TABLE_NAME, null, values);
+                if (_id > 0)
+                    returnUri = DocsContract.CommunityEntry.buildCommunityUri(_id);
+                else
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                break;
+            }
+            case DIALOGS: {
+                long _id = db.insert(DocsContract.DialogEntry.TABLE_NAME, null, values);
+                if (_id > 0)
+                    returnUri = DocsContract.DialogEntry.buildDialogsUri(_id);
+                else
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                break;
+            }
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -222,6 +287,14 @@ public class DocsProvider extends ContentProvider {
             case FILES:
                 rowsDeleted = db.delete(
                         DocsContract.FileEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            case DIALOGS:
+                rowsDeleted = db.delete(
+                        DocsContract.DialogEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            case GROUPS:
+                rowsDeleted = db.delete(
+                        DocsContract.CommunityEntry.TABLE_NAME, selection, selectionArgs);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
@@ -252,6 +325,14 @@ public class DocsProvider extends ContentProvider {
                 rowsUpdated = db.update(DocsContract.FileEntry.TABLE_NAME, values, selection,
                         selectionArgs);
                 break;
+            case DIALOGS:
+                rowsUpdated = db.update(DocsContract.DialogEntry.TABLE_NAME, values, selection,
+                        selectionArgs);
+                break;
+            case GROUPS:
+                rowsUpdated = db.update(DocsContract.CommunityEntry.TABLE_NAME, values, selection,
+                        selectionArgs);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -268,13 +349,48 @@ public class DocsProvider extends ContentProvider {
         Log.w("ANNA", "Bulk insert");
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
+        int returnCount;
         switch (match) {
             case DOCS:
                 db.beginTransaction();
-                int returnCount = 0;
+                returnCount = 0;
                 try {
                     for (ContentValues value : values) {
                         long _id = db.insert(DocsContract.DocumentEntry.TABLE_NAME, null, value);
+                        Log.w("ANNA", "ID+" + _id);
+                        if (_id != -1) {
+                            returnCount++;
+                        }
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+                getContext().getContentResolver().notifyChange(uri, null);
+                return returnCount;
+            case GROUPS:
+                db.beginTransaction();
+                returnCount = 0;
+                try {
+                    for (ContentValues value : values) {
+                        long _id = db.insert(DocsContract.CommunityEntry.TABLE_NAME, null, value);
+                        Log.w("ANNA", "ID+" + _id);
+                        if (_id != -1) {
+                            returnCount++;
+                        }
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+                getContext().getContentResolver().notifyChange(uri, null);
+                return returnCount;
+            case DIALOGS:
+                db.beginTransaction();
+                returnCount = 0;
+                try {
+                    for (ContentValues value : values) {
+                        long _id = db.insert(DocsContract.DialogEntry.TABLE_NAME, null, value);
                         Log.w("ANNA", "ID+" + _id);
                         if (_id != -1) {
                             returnCount++;
@@ -302,6 +418,10 @@ public class DocsProvider extends ContentProvider {
         matcher.addURI(authority, DocsContract.PATH_FILES + "/#", FILES_WITH_ID);
         matcher.addURI(authority, DocsContract.PATH_FILES, FILES);
         matcher.addURI(authority, DocsContract.PATH_DOCS + "/*", DOCS_WITH_CONST);
+        matcher.addURI(authority, DocsContract.PATH_GROUPS + "/#", GROUPS_WITH_USER);
+        matcher.addURI(authority, DocsContract.PATH_GROUPS, GROUPS);
+        matcher.addURI(authority, DocsContract.PATH_DIALOGS + "/#", DIALOGS_WITH_USER);
+        matcher.addURI(authority, DocsContract.PATH_DIALOGS, DIALOGS);
         return matcher;
     }
 }

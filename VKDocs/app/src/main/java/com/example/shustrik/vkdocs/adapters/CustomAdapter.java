@@ -12,4 +12,5 @@ public interface CustomAdapter {
     void setLoading(boolean loading);
     void onSaveInstanceState(Bundle outState);
     void onRestoreInstanceState(Bundle savedInstanceState);
+    void onRefreshFailed();
 }

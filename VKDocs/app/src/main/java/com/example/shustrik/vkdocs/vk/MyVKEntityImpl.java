@@ -1,6 +1,10 @@
 package com.example.shustrik.vkdocs.vk;
 
 
+import android.database.Cursor;
+
+import com.example.shustrik.vkdocs.common.DBConverter;
+
 public class MyVKEntityImpl implements MyVKEntity {
     private int peerId;
 
@@ -8,10 +12,27 @@ public class MyVKEntityImpl implements MyVKEntity {
 
     private String previewUrl;
 
+    public enum SrcType {
+        GROUP,
+        DIALOG
+    }
+
     public MyVKEntityImpl(int peerId, String peerName, String previewUrl) {
         this.peerId = peerId;
         this.peerName = peerName;
         this.previewUrl = previewUrl;
+    }
+
+    public MyVKEntityImpl(Cursor cursor, SrcType type) {
+        if (type == SrcType.GROUP) {
+            peerId = cursor.getInt(DBConverter.COL_GROUP_ID);
+            peerName = cursor.getString(DBConverter.COL_GROUP_TITLE);
+            previewUrl = cursor.getString(DBConverter.COL_GROUP_PREVIEW);
+        } else if (type == SrcType.DIALOG) {
+            peerId = cursor.getInt(DBConverter.COL_DIALOG_PEER_ID);
+            peerName = cursor.getString(DBConverter.COL_DIALOG_TITLE);
+            previewUrl = cursor.getString(DBConverter.COL_DIALOG_PREVIEW);
+        }
     }
 
     @Override

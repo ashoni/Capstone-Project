@@ -11,33 +11,51 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SyncRequest;
 import android.content.SyncResult;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.example.shustrik.vkdocs.MainActivity;
 import com.example.shustrik.vkdocs.R;
+import com.example.shustrik.vkdocs.common.DBConverter;
 import com.example.shustrik.vkdocs.data.DocsContract;
+import com.example.shustrik.vkdocs.loaders.CommunitiesLoader;
+import com.example.shustrik.vkdocs.loaders.DialogsLoader;
+import com.example.shustrik.vkdocs.loaders.MyDocsLoader;
+import com.example.shustrik.vkdocs.vk.MyVKApiDialog;
 import com.example.shustrik.vkdocs.vk.MyVKApiDocument;
 import com.example.shustrik.vkdocs.vk.MyVKDocsArray;
 import com.example.shustrik.vkdocs.vk.VKRequestCallback;
 import com.example.shustrik.vkdocs.vk.VKRequests;
 import com.vk.sdk.api.VKError;
+import com.vk.sdk.api.model.VKApiCommunity;
+import com.vk.sdk.api.model.VKApiCommunityArray;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
 
 public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
+    public static final String ACTION_DOCS_UPDATED =
+            "com.example.shustrik.vkdocs.app.ACTION_DOCS_UPDATED";
+    public static final String ACTION_GROUPS_UPDATED =
+            "com.example.shustrik.vkdocs.app.ACTION_GROUPS_UPDATED";
+    public static final String ACTION_DIALOGS_UPDATED =
+            "com.example.shustrik.vkdocs.app.ACTION_DIALOGS_UPDATED";
     // Interval at which to sync with the weather, in seconds.
     // 60 seconds (1 minute) * 180 = 3 hours
     public static final int SYNC_INTERVAL = 60 * 180;
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL / 3;
 
     private ContentResolver contentResolver;
+    private Context context;
 
     public VKDocsSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
+        this.context = context;
         contentResolver = context.getContentResolver();
     }
 
@@ -45,13 +63,14 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
     public void onPerformSync(Account account, Bundle extras, String authority,
                               ContentProviderClient provider, SyncResult syncResult) {
         Log.d("ANNA", "----------------------------------------------------------Starting sync");
+
+        final SharedPreferences prefs = context.getSharedPreferences(MainActivity.PREFS, Context.MODE_PRIVATE);
+
         VKRequests.getDocs(new VKRequestCallback<MyVKDocsArray>() {
             @Override
             public void onSuccess(MyVKDocsArray docsArray) {
-                Vector<ContentValues> cVVector = new Vector<ContentValues>(docsArray.size());
+                Vector<ContentValues> cVVector = new Vector<>(docsArray.size());
 
-                SharedPreferences prefs = getContext()
-                        .getSharedPreferences("settings", Context.MODE_PRIVATE);
                 Set<String> oldIds = prefs.getStringSet("ids", new HashSet<String>());
                 Set<String> newIds = new HashSet<>();
 
@@ -62,52 +81,104 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
                     if (oldIds.contains(id)) {
                         updateDb(doc);
                     } else {
-                        cVVector.add(parseIntoValues(doc));
+                        cVVector.add(DBConverter.parseIntoValues(doc));
                     }
                 }
-                insertToDb(cVVector);
+                insertToDb(cVVector, DocsContract.DocumentEntry.CONTENT_URI);
                 oldIds.removeAll(newIds);
                 for (String id : oldIds) {
-                    deleteFromDB(id);
+                    deleteDocFromDB(id);
                 }
 
                 SharedPreferences.Editor e = prefs.edit();
                 e.putStringSet("ids", newIds);
                 e.commit();
+                if (MyDocsLoader.getInstance() != null) {
+                    MyDocsLoader.getInstance().onSyncUpdate(true);
+                }
             }
 
             @Override
             public void onError(VKError e) {
                 Log.w("ANNA", "Load mydocs error: " + e);
+
+                if (MyDocsLoader.getInstance() != null) {
+                    MyDocsLoader.getInstance().onSyncUpdate(false);
+                }
+            }
+        });
+
+        VKRequests.getCommunities(new VKRequestCallback<VKApiCommunityArray>() {
+            @Override
+            public void onSuccess(VKApiCommunityArray communityArray) {
+                Log.w("ANNA", "sync :: comm :: got :: " + communityArray.size());
+                Set<String> oldIds = prefs.getStringSet("group_ids", new HashSet<String>());
+                Set<String> newIds = new HashSet<>();
+
+                Vector<ContentValues> cVVector = new Vector<>(communityArray.size());
+                for (VKApiCommunity community : communityArray) {
+                    newIds.add(String.valueOf(community.id));
+                    if (!oldIds.contains(String.valueOf(community.id))) {
+                        cVVector.add(DBConverter.parseIntoValues(community, prefs.getInt(MainActivity.USER_ID, 0)));
+                    }
+                }
+                Log.w("ANNA", "sync :: comm :: new ::" + newIds.size() + " old :: " + oldIds.size());
+                insertToDb(cVVector, DocsContract.CommunityEntry.CONTENT_URI);
+                oldIds.removeAll(newIds);
+                Log.w("ANNA", "sync :: old: " + oldIds.size());
+                for (String id : oldIds) {
+                    deleteGroupFromDB(id);
+                }
+                SharedPreferences.Editor e = prefs.edit();
+                e.putStringSet("group_ids", newIds);
+                Log.w("ANNA", "sync group success: " + newIds.size());
+                e.commit();
+                if (CommunitiesLoader.getInstance() != null) {
+                    CommunitiesLoader.getInstance().onSyncUpdate(true);
+                }
+            }
+
+            @Override
+            public void onError(VKError e) {
+                Log.w("ANNA", "Sync group error");
+                if (CommunitiesLoader.getInstance() != null) {
+                    CommunitiesLoader.getInstance().onSyncUpdate(false);
+                }
+            }
+        }, 0, CommunitiesLoader.START_COUNT);
+
+        DialogsLoader.loadDialogs(0, DialogsLoader.START_COUNT, new DialogsLoader.Callback() {
+            @Override
+            public void process(List<MyVKApiDialog> dialogs, boolean isSuccess) {
+                if (isSuccess) {
+                    clearDialogsDB();
+                    Vector<ContentValues> cVVector = new Vector<>(dialogs.size());
+                    for (MyVKApiDialog dialog : dialogs) {
+                        cVVector.add(DBConverter.parseIntoValues(dialog, prefs.getInt(MainActivity.USER_ID, 0)));
+                    }
+                    insertToDb(cVVector, DocsContract.DialogEntry.CONTENT_URI);
+                }
+                Log.w("ANNA", "Dialogs sync: " + isSuccess);
+                if (DialogsLoader.getInstance() != null) {
+                    DialogsLoader.getInstance().onSyncUpdate(isSuccess);
+                }
             }
         });
     }
 
 
-    private ContentValues parseIntoValues(MyVKApiDocument doc) {
-        ContentValues docsValues = new ContentValues();
-        docsValues.put(DocsContract.DocumentEntry._ID, doc.id);
-        docsValues.put(DocsContract.DocumentEntry.COLUMN_ACCESS_KEY, doc.access_key);
-        docsValues.put(DocsContract.DocumentEntry.COLUMN_OWNER_ID, doc.owner_id);
-        docsValues.put(DocsContract.DocumentEntry.COLUMN_SIZE, doc.size);
-        docsValues.put(DocsContract.DocumentEntry.COLUMN_TITLE, doc.title);
-        docsValues.put(DocsContract.DocumentEntry.COLUMN_TYPE, doc.getFileType());
-        docsValues.put(DocsContract.DocumentEntry.COLUMN_URL, doc.url);
-        docsValues.put(DocsContract.DocumentEntry.COLUMN_DATE, doc.getDate());
-        if (!doc.photo_130.isEmpty()) {
-            docsValues.put(DocsContract.DocumentEntry.COLUMN_PREVIEW_URL, doc.photo_130);
-        } else if (!doc.photo_100.isEmpty()) {
-            docsValues.put(DocsContract.DocumentEntry.COLUMN_PREVIEW_URL, doc.photo_100);
-        }
-        return docsValues;
-    }
+//    private void sendBroadcast(String name, boolean isSuccess) {
+//        Intent dataUpdatedIntent = new Intent(name).setPackage(context.getPackageName());
+//        dataUpdatedIntent.putExtra("result", isSuccess ? "success" : "fail");
+//        context.sendBroadcast(dataUpdatedIntent);
+//    }
 
 
-    private void insertToDb(Vector<ContentValues> cVVector) {
+    private void insertToDb(Vector<ContentValues> cVVector, Uri uri) {
         if (cVVector.size() > 0) {
             ContentValues[] cvArray = new ContentValues[cVVector.size()];
             cVVector.toArray(cvArray);
-            contentResolver.bulkInsert(DocsContract.DocumentEntry.CONTENT_URI, cvArray);
+            contentResolver.bulkInsert(uri, cvArray);
             //notify anybody
         }
     }
@@ -125,11 +196,20 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
 
-    private void deleteFromDB(String id) {
+    private void deleteDocFromDB(String id) {
         contentResolver.delete(DocsContract.DocumentEntry.CONTENT_URI,
                 DocsContract.DocumentEntry._ID + "=" + id, null);
     }
 
+    private void deleteGroupFromDB(String id) {
+        contentResolver.delete(DocsContract.CommunityEntry.CONTENT_URI,
+                DocsContract.CommunityEntry._ID + "=" + id, null);
+    }
+
+    private void clearDialogsDB() {
+        contentResolver.delete(DocsContract.DialogEntry.CONTENT_URI,
+                null, null);
+    }
 
     /**
      * Helper method to schedule the sync adapter periodic execution

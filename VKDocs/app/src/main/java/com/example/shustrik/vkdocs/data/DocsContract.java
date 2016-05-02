@@ -120,10 +120,16 @@ public class DocsContract {
         public static final String COLUMN_TYPE = "dialog_type";
         public static final String COLUMN_PREVIEW_URL = "preview_url";
         public static final String COLUMN_DATE = "date";
+        public static final String COLUMN_OWNER_ID = "owner_id";
+        public static final String COLUMN_PEER_ID = "peer_id";
 
 
-        public static Uri buildDialogsUri(long id) {
-            return ContentUris.withAppendedId(CONTENT_URI, id);
+        public static Uri buildDialogsUri(long ownerId) {
+            return ContentUris.withAppendedId(CONTENT_URI, ownerId);
+        }
+
+        public static String getOwnerIdFromUri(Uri uri) {
+            return uri.getLastPathSegment();
         }
 
         public static String sortDateDesc() {
@@ -146,9 +152,14 @@ public class DocsContract {
         public static final String COLUMN_TITLE = "title";
         public static final String COLUMN_PREVIEW_URL = "preview_url";
         public static final String COLUMN_DATE = "date";
+        public static final String COLUMN_OWNER_ID = "owner_id";
 
-        public static Uri buildCommunityUri(long id) {
-            return ContentUris.withAppendedId(CONTENT_URI, id);
+        public static Uri buildCommunityUri(long ownerId) {
+            return ContentUris.withAppendedId(CONTENT_URI, ownerId);
+        }
+
+        public static String getOwnerIdFromUri(Uri uri) {
+            return uri.getLastPathSegment();
         }
 
         public static String sortDateDesc() {
