@@ -1,7 +1,7 @@
 package com.example.shustrik.vkdocs.adapters;
 
-import android.content.Context;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.shustrik.vkdocs.MainActivity;
 import com.example.shustrik.vkdocs.R;
 import com.example.shustrik.vkdocs.uicommon.DocIcons;
 import com.example.shustrik.vkdocs.vk.MyVKEntity;
@@ -19,10 +20,13 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
+/**
+ * Adapter for VK entities which hold documents (dialogs, communities)
+ */
 public class VKEntityListAdapter extends RecyclerView.Adapter<VKEntityListAdapter.DialogViewHolder>
         implements CustomAdapter {
     private List<MyVKEntity> vkEntities;
-    private Context context;
+    private MainActivity activity;
     private View emptyView;
     private View loadingView;
     private boolean loading;
@@ -35,8 +39,8 @@ public class VKEntityListAdapter extends RecyclerView.Adapter<VKEntityListAdapte
     private LoadMore loadMore;
 
 
-    public VKEntityListAdapter(Context context, OnClickHandler handler) {
-        this.context = context;
+    public VKEntityListAdapter(MainActivity activity, OnClickHandler handler) {
+        this.activity = activity;
         this.handler = handler;
     }
 
@@ -46,7 +50,7 @@ public class VKEntityListAdapter extends RecyclerView.Adapter<VKEntityListAdapte
 
     @Override
     public void onRefreshFailed() {
-        //activity snack
+        activity.snack(activity.getString(R.string.refresh_failed), Snackbar.LENGTH_LONG);
     }
 
     @Override
@@ -121,7 +125,7 @@ public class VKEntityListAdapter extends RecyclerView.Adapter<VKEntityListAdapte
         holder.setPeerId(vkEntity.getPeerId());
         holder.username.setText(vkEntity.getPeerName());
         if (vkEntity.getPreviewUrl() != null) {
-            Picasso.with(context)
+            Picasso.with(activity)
                     .load(vkEntity.getPreviewUrl())
                     .placeholder(DocIcons.getChatIcon())
                     .error(DocIcons.getChatIcon())

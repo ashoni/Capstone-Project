@@ -3,6 +3,9 @@ package com.example.shustrik.vkdocs.vk;
 
 import java.util.List;
 
+/**
+ * List of documents published on the wall of the community
+ */
 public class MyVKWallDocs {
     private int count;
     private List<MyVKApiDocument> results;

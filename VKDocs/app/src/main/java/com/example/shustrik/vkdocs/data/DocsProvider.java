@@ -27,19 +27,19 @@ public class DocsProvider extends ContentProvider {
 
 
     private static final String sDocIdSelection =
-            DocsContract.DocumentEntry.TABLE_NAME+
+            DocsContract.DocumentEntry.TABLE_NAME +
                     "." + DocsContract.DocumentEntry._ID + " = ? ";
 
     private static final String sFileIdSelection =
-            DocsContract.DocumentEntry.TABLE_NAME+
+            DocsContract.DocumentEntry.TABLE_NAME +
                     "." + DocsContract.FileEntry._ID + " = ? ";
 
     private static final String dialogOwnerSelection =
-            DocsContract.DialogEntry.TABLE_NAME+
+            DocsContract.DialogEntry.TABLE_NAME +
                     "." + DocsContract.DialogEntry.COLUMN_OWNER_ID + " = ? ";
 
     private static final String groupOwnerSelection =
-            DocsContract.CommunityEntry.TABLE_NAME+
+            DocsContract.CommunityEntry.TABLE_NAME +
                     "." + DocsContract.CommunityEntry.COLUMN_OWNER_ID + " = ? ";
 
 
@@ -341,7 +341,6 @@ public class DocsProvider extends ContentProvider {
         }
         return rowsUpdated;
     }
-
 
 
     @Override

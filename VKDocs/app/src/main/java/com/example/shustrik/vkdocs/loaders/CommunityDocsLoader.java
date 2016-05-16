@@ -8,6 +8,7 @@ import com.example.shustrik.vkdocs.adapters.DocListAdapter;
 import com.example.shustrik.vkdocs.adapters.LoadMore;
 import com.example.shustrik.vkdocs.vk.MyVKApiDocument;
 import com.example.shustrik.vkdocs.vk.MyVKDocsArray;
+import com.example.shustrik.vkdocs.vk.MyVKEntity;
 import com.example.shustrik.vkdocs.vk.MyVKWallDocs;
 import com.example.shustrik.vkdocs.vk.VKRequestCallback;
 import com.example.shustrik.vkdocs.vk.VKRequests;
@@ -16,13 +17,12 @@ import com.vk.sdk.api.VKError;
 import java.util.ArrayList;
 import java.util.List;
 
-//Переделать обновление: в 0 не сбрасывать, если обновиться не удалось, вернуть значения переменных в исходное состояние,
-// не трогать адаптер. В остальных классах также. Если удалось - всё обновить.
-//Дальше сделать загрузку и персонализировать меню. Убедиться, что параллельная загрузка работает.
-//(файл помечается как доступный оффлайн)
-public class CommunityDocsLoader implements CustomLoader, LoadMore {
-    public static String TAG = "ANNA_DDL";
 
+/**
+ * Loads documents from the community (first loads the community documents, then documents which were
+ * published on the wall
+ */
+public class CommunityDocsLoader implements CustomLoader, LoadMore {
     private static final int COMM_COUNT = 30;
     private static final int WALL_COUNT = 50;
     private int peerId;
@@ -81,7 +81,6 @@ public class CommunityDocsLoader implements CustomLoader, LoadMore {
 
     @Override
     public void load() {
-        Log.w("ANNA", "loooooad");
         if (from == 0) {
             loadCommunityDocs();
         } else if (from == 1) {
@@ -91,18 +90,13 @@ public class CommunityDocsLoader implements CustomLoader, LoadMore {
 
 
     private void loadCommunityWallDocs() {
-        Log.w("ANNA", "load wall");
         VKRequests.getDocsFromWall(new VKRequestCallback<MyVKWallDocs>() {
             @Override
             public void onSuccess(MyVKWallDocs wallDocs) {
-                Log.w("ANNA", "On success");
-                //Проверить внутренние исключения
                 updateAdapterState(wallPack, false);
 
-                Log.w("ANNA", "Situation " + isSearch + " " + query);
                 List<MyVKApiDocument> nDocs = new ArrayList<>();
                 if (isSearch && query != null) {
-                    Log.w("ANNA", "tutochki");
                     for (MyVKApiDocument doc : wallDocs.getResults()) {
                         if (doc.title.toLowerCase().contains(query.toLowerCase())) {
                             nDocs.add(doc);
@@ -111,13 +105,11 @@ public class CommunityDocsLoader implements CustomLoader, LoadMore {
                 } else {
                     nDocs.addAll(wallDocs.getResults());
                 }
-                Log.w("ANNA", "Size " + nDocs.size());
 
                 if (wallPack.isFirstLoad()) {
                     if (isRefreshing) {
                         adapter.swapData(nDocs);
                     } else {
-                        Log.w("ANNA", "another add");
                         if (adapter.getItemCount() == 0) {
                             adapter.swapData(nDocs);
                         } else {
@@ -126,12 +118,10 @@ public class CommunityDocsLoader implements CustomLoader, LoadMore {
                     }
                     wallPack.setTotal(wallDocs.getCount() < 500 ? wallDocs.getCount() : 500);
                 } else {
-                    Log.w("ANNA", "add data");
                     adapter.addData(nDocs);
                 }
                 wallPack.updateLoaded(wallDocs.getResults().size());
                 if (wallPack.isFinished()) {
-                    Log.w("ANNA", "Done with docs-1");
                     from = 2;
                     adapter.notifyLoadFinished();
                 }
@@ -140,9 +130,7 @@ public class CommunityDocsLoader implements CustomLoader, LoadMore {
 
             @Override
             public void onError(VKError e) {
-                //message
                 updateAdapterState(wallPack, true);
-                Log.w(TAG, e.toString());
                 adapter.notifyLoadingComplete();
             }
         }, -peerId, wallPack.getOffset(), wallPack.getCount());
@@ -155,7 +143,6 @@ public class CommunityDocsLoader implements CustomLoader, LoadMore {
             public void onSuccess(MyVKDocsArray documents) {
                 if (commPack.isFirstLoad() && documents.size() == 0) {
                     from = 1;
-                    Log.w("ANNA", "Go for wall");
                     loadCommunityWallDocs();
                 } else {
                     updateAdapterState(commPack, false);
@@ -178,8 +165,6 @@ public class CommunityDocsLoader implements CustomLoader, LoadMore {
                     commPack.updateLoaded(documents.size());
                 }
                 if (commPack.isFinished()) {
-                    Log.w("ANNA", "Done with docs-1");
-                    Log.w("ANNA", "Go for wall");
                     from = 1;
                 }
                 if (isSearch && commPack.isFinished()) {
@@ -192,7 +177,6 @@ public class CommunityDocsLoader implements CustomLoader, LoadMore {
             @Override
             public void onError(VKError e) {
                 updateAdapterState(commPack, true);
-                Log.w(TAG, e.toString());
                 adapter.notifyLoadingComplete();
             }
         }, -peerId, commPack.getCount(), commPack.getOffset());
@@ -222,14 +206,6 @@ public class CommunityDocsLoader implements CustomLoader, LoadMore {
         } else {
             isSearch = true;
             this.query = query;
-//            List<MyVKEntity> searchList = new ArrayList<>();
-//            for (MyVKEntity community : dialogs) {
-//                if (community.getPeerName().contains(query)) {
-//                    searchList.add(community);
-//                }
-//            }
-//            dialogs = searchList;
-//            adapter.swapData(dialogs);
             initLoader();
         }
     }
@@ -240,7 +216,6 @@ public class CommunityDocsLoader implements CustomLoader, LoadMore {
         private int total = -1;
 
         public ReqParamPack(ReqParamPack pack, int defCount) {
-            //attempt to read on null
             if (pack != null) {
                 count = pack.count;
                 offset = pack.offset;

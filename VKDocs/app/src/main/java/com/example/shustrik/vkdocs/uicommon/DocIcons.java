@@ -5,6 +5,9 @@ import com.example.shustrik.vkdocs.R;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Maps VK document types to icons
+ */
 public class DocIcons {
     private static Map<Integer, Integer> icons = new HashMap<>();
 

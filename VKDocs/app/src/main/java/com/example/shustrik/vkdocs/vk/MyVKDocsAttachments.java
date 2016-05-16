@@ -2,6 +2,9 @@ package com.example.shustrik.vkdocs.vk;
 
 import java.util.List;
 
+/**
+ * Documents attached to the message
+ */
 public class MyVKDocsAttachments {
     private List<MyVKApiDocument> documents;
     private String next;

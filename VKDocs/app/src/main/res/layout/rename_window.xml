@@ -3,117 +3,45 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="300dp"
     android:layout_height="wrap_content"
-    android:elevation="24dp"
     android:background="@color/white"
     android:padding="@dimen/popup_padding">
+
     <TextView
         android:id="@+id/rename_text"
+        style="@style/CaptionText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/doc_list_item_margin"
-        android:text="Rename document"
-        style="@style/CaptionText"
-        app:layout_gravity="center_vertical"/>
+        android:text="@string/rename_document"
+        android:labelFor="@+id/new_caption"
+        app:layout_gravity="center_vertical" />
 
     <EditText
         android:id="@+id/new_caption"
+        style="@style/SmallText"
+        android:inputType="textAutoComplete|textAutoCorrect"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/doc_list_item_margin"
-        style="@style/SmallText"
-        android:backgroundTint="@color/colorPrimary"
-        android:text="lala"
-        android:layout_below="@+id/rename_text"/>
+        android:layout_below="@+id/rename_text"
+        android:layout_margin="@dimen/doc_list_item_margin" />
 
     <TextView
         android:id="@+id/rename_cancel"
+        style="@style/SmallPrimaryText"
         android:layout_width="80dp"
         android:layout_height="40dp"
-        android:text="CANCEL"
-        style="@style/SmallPrimaryText"
-        android:gravity="center"
         android:layout_alignParentEnd="true"
-        android:layout_below="@+id/new_caption"/>
+        android:layout_below="@+id/new_caption"
+        android:gravity="center"
+        android:text="@string/cancel" />
 
     <TextView
         android:id="@+id/rename_ok"
+        style="@style/SmallPrimaryText"
         android:layout_width="80dp"
         android:layout_height="40dp"
-        android:text="OK"
-        style="@style/SmallPrimaryText"
-        android:gravity="center"
         android:layout_below="@id/new_caption"
-        android:layout_toStartOf="@id/rename_cancel"/>
+        android:layout_toStartOf="@id/rename_cancel"
+        android:gravity="center"
+        android:text="@string/ok" />
 </RelativeLayout>
-
-<!--<android.support.v7.widget.GridLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
-    <!--xmlns:app="http://schemas.android.com/apk/res-auto"-->
-    <!--android:layout_width="300dp"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:background="@color/white"-->
-    <!--android:paddingStart="@dimen/doc_list_item_padding"-->
-    <!--android:paddingTop="@dimen/doc_list_item_padding"-->
-    <!--android:paddingBottom="@dimen/doc_list_item_padding"-->
-    <!--app:columnCount="4"-->
-    <!--app:rowCount="3"-->
-    <!--android:id="@+id/list_item_grid">-->
-
-    <!--<TextView-->
-        <!--android:id="@+id/rename_text"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_margin="@dimen/doc_list_item_margin"-->
-        <!--android:text="Rename document"-->
-        <!--style="@style/CaptionText"-->
-        <!--app:layout_columnSpan="4"-->
-        <!--app:layout_gravity="center_vertical"/>-->
-
-    <!--<EditText-->
-        <!--android:id="@+id/new_caption"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_margin="@dimen/doc_list_item_margin"-->
-        <!--style="@style/SmallText"-->
-        <!--app:layout_columnSpan="4"-->
-        <!--android:backgroundTint="@color/colorPrimary"-->
-        <!--android:text="lala"/>-->
-
-    <!--<Space -->
-        <!--app:layout_columnSpan="2"/>-->
-    <!-- -->
-    <!--<TextView-->
-        <!--android:id="@+id/rename_cancel"-->
-        <!--android:layout_width="100dp"-->
-        <!--android:layout_height="40dp"-->
-        <!--android:text="CANCEL"-->
-        <!--style="@style/SmallPrimaryText"-->
-        <!--android:gravity="center"-->
-        <!--app:layout_gravity="center_vertical|left"/>-->
-
-    <!--<TextView-->
-        <!--android:id="@+id/rename_ok"-->
-        <!--android:layout_width="100dp"-->
-        <!--android:layout_height="40dp"-->
-        <!--android:text="OK"-->
-        <!--style="@style/SmallPrimaryText"-->
-        <!--android:gravity="center"-->
-        <!--app:layout_gravity="center_vertical|right"/>-->
-    <!-- -->
-    <!--&lt;!&ndash;<Button&ndash;&gt;-->
-        <!--&lt;!&ndash;android:id="@+id/complete_rename"&ndash;&gt;-->
-        <!--&lt;!&ndash;app:layout_gravity="center_vertical|left"&ndash;&gt;-->
-        <!--&lt;!&ndash;android:layout_width="100dp"&ndash;&gt;-->
-        <!--&lt;!&ndash;android:layout_height="50dp"&ndash;&gt;-->
-        <!--&lt;!&ndash;android:background="@color/white"&ndash;&gt;-->
-        <!--&lt;!&ndash;style="@style/SmallPrimaryText"&ndash;&gt;-->
-        <!--&lt;!&ndash;android:text="Rename"/>&ndash;&gt;-->
-
-    <!--&lt;!&ndash;<Button&ndash;&gt;-->
-        <!--&lt;!&ndash;android:id="@+id/cancel_rename"&ndash;&gt;-->
-        <!--&lt;!&ndash;app:layout_gravity="center_vertical|right"&ndash;&gt;-->
-        <!--&lt;!&ndash;android:layout_width="100dp"&ndash;&gt;-->
-        <!--&lt;!&ndash;android:layout_height="50dp"&ndash;&gt;-->
-        <!--&lt;!&ndash;android:background="@color/white"&ndash;&gt;-->
-        <!--&lt;!&ndash;android:sha&ndash;&gt;-->
-        <!--&lt;!&ndash;style="@style/SmallPrimaryText"&ndash;&gt;-->
-        <!--&lt;!&ndash;android:text="Cancel"/>&ndash;&gt;-->
-
-<!--</android.support.v7.widget.GridLayout>-->

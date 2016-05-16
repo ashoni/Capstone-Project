@@ -1,8 +1,10 @@
 package com.example.shustrik.vkdocs;
 
+import android.app.Activity;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -23,15 +25,17 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.shustrik.vkdocs.adapters.CustomAdapter;
 import com.example.shustrik.vkdocs.adapters.DocListAdapter;
 import com.example.shustrik.vkdocs.adapters.VKEntityListAdapter;
 import com.example.shustrik.vkdocs.download.DefaultDownloader;
 import com.example.shustrik.vkdocs.download.DocDownloaderHolder;
+import com.example.shustrik.vkdocs.download.DocNotificationManager;
+import com.example.shustrik.vkdocs.download.GoogleDriveDownloader;
 import com.example.shustrik.vkdocs.fragments.MainActivityFragment;
 import com.example.shustrik.vkdocs.loaders.CommunitiesLoader;
 import com.example.shustrik.vkdocs.loaders.CommunityDocsLoader;
@@ -41,42 +45,58 @@ import com.example.shustrik.vkdocs.loaders.DialogsLoader;
 import com.example.shustrik.vkdocs.loaders.GlobalLoader;
 import com.example.shustrik.vkdocs.loaders.MyDocsLoader;
 import com.example.shustrik.vkdocs.sync.VKDocsSyncAdapter;
+import com.example.shustrik.vkdocs.uicommon.FabManager;
+import com.example.shustrik.vkdocs.uicommon.OpenFileDialog;
+import com.example.shustrik.vkdocs.uicommon.OpenFileDialogPermissionsManager;
 import com.example.shustrik.vkdocs.vk.VKRequestCallback;
 import com.example.shustrik.vkdocs.vk.VKRequests;
 import com.example.shustrik.vkdocs.vk.VKScopes;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveId;
+import com.google.android.gms.drive.OpenFileActivityBuilder;
+import com.squareup.picasso.Picasso;
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKCallback;
 import com.vk.sdk.VKSdk;
 import com.vk.sdk.api.VKError;
 import com.vk.sdk.api.model.VKApiUser;
 
+import java.io.File;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-/**
- * Разобраться, как syncadapter оповещает активити
- * <p>
- * Если что, navigation проверять здесь:
- * http://www.android4devs.com/2015/06/navigation-view-material-design-support.html
- * Проверить по
- * https://www.google.com/design/spec/patterns/navigation-drawer.html#
- */
 public class MainActivity extends AppCompatActivity implements SelectCallback,
-        ActivityCompat.OnRequestPermissionsResultCallback {
+        ActivityCompat.OnRequestPermissionsResultCallback,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener {
     public static final String USER_FNAME = "first_name";
     public static final String USER_LNAME = "last_name";
     public static final String USER_ID = "user_id";
     public static final String PREFS = "settings";
-    public static final String TAG = "ANNA_MainActivity";
+    public static final String LOGIN = "login";
+
+    private static final int REQUEST_CODE_RESOLUTION = 3;
+
     public static final int MY_DOCS = 0;
     public static final int DIALOGS = 1;
     public static final int COMMUNITIES = 2;
     public static final int DIALOG_DOCS = 3;
     public static final int COMMUNITY_DOCS = 4;
     public static final int GLOBAL = 5;
+    private static final int REQUEST_CODE_OPENER = 33;
+    private static final String USER_PIC = "USER_PIC";
     private static MainActivityFragment curFragment;
     private static int dialogPeer = -1;
     private static int communityPeer = -1;
+
+    private Tracker mTracker;
+
     @Bind(R.id.toolbar)
     Toolbar toolbar;
     @Bind(R.id.fab)
@@ -91,12 +111,10 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
     SwipeRefreshLayout mSwipeRefreshLayout;
     TextView username;
 
+    private DriveId mFileId;
+    private boolean isWaitingForGDdownload = false;
+    private GoogleApiClient mGoogleApiClient;
 
-//    @Override
-//    protected void onStop() {
-//        DocDownloaderHolder.detach();
-//        super.onStop();
-//    }
     private SharedPreferences prefs;
     private ActionBarDrawerToggle actionBarDrawerToggle;
     private long userId;
@@ -104,9 +122,10 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mTracker = ((ApplicationWithVK)getApplication()).getDefaultTracker();
 
         prefs = this.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-        if (!prefs.getBoolean("login", false)) {
+        if (!prefs.getBoolean(LOGIN, false)) {
             VKRequests.login(this,
                     VKScopes.DOCS.getName(),
                     VKScopes.FRIENDS.getName(),
@@ -122,11 +141,42 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
 
         setSupportActionBar(toolbar);
 
+        final Activity thisActivity = this;
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                new FabManager(thisActivity, coordinatorLayout, new FabManager.FabCallback() {
+                    @Override
+                    public void onLocalUpload() {
+                        OpenFileDialogPermissionsManager.checkPermissions(MainActivity.this,
+                                new OpenFileDialogPermissionsManager.Callback() {
+                                    @Override
+                                    public void performIfGranted() {
+                                        openFileChooser();
+                                    }
+                                });
+                    }
+
+                    @Override
+                    public void onDriveUpload() {
+                        IntentSender intentSender = Drive.DriveApi
+                                .newOpenFileActivityBuilder()
+                                .setMimeType(new String[]{"text/plain", "text/html", "image/jpeg",
+                                        "text/xml", "text/plain", "application/pdf", "image/png",
+                                        "image/gif", "image/bmp", "application/msword", "audio/mpeg",
+                                        "application/zip", "application/rar", "application/tar"
+
+                                })
+                                .build(mGoogleApiClient);
+                        try {
+                            startIntentSenderForResult(intentSender,
+                                    REQUEST_CODE_OPENER, null, 0, 0, 0);
+
+                        } catch (IntentSender.SendIntentException e) {
+
+                        }
+                    }
+                }).show();
             }
         });
 
@@ -143,15 +193,12 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
                 switch (menuItem.getItemId()) {
                     default:
                     case R.id.my_docs:
-                        toolbar.setTitle("My Documents");
                         setFragment(getMyDocsFragment(), true);
                         return true;
                     case R.id.dialogs_docs:
-                        toolbar.setTitle("Dialog Documents");
                         setFragment(getDialogsFragment(), false);
                         return true;
                     case R.id.group_docs:
-                        toolbar.setTitle("Community Documents");
                         setFragment(getCommunitiesFragment(), false);
                         return true;
                     case R.id.global_docs:
@@ -182,10 +229,8 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
         }
 
         username = (TextView) navigationView.getHeaderView(0).findViewById(R.id.nav_username);
-        Log.w("ANNA", "USERNAME: " + username);
-        updateUsername(prefs.getString(USER_FNAME, ""), prefs.getString(USER_LNAME, ""));
-
-        mSwipeRefreshLayout.setColorSchemeColors(R.color.blue, R.color.orange, R.color.purple, R.color.green);
+        updateUserInfo(prefs.getString(USER_FNAME, ""), prefs.getString(USER_LNAME, ""),
+                prefs.getString(USER_PIC, ""));
 
         DocDownloaderHolder.attach(this);
 
@@ -201,9 +246,34 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
     private void handleIntent(Intent intent) {
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
-            Log.w("ANNA", "Search ction");
             doMySearch(query);
         }
+    }
+
+    private void openFileChooser() {
+        OpenFileDialog fileDialog = new OpenFileDialog(MainActivity.this)
+                .setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
+                    @Override
+                    public void OnSelectedFile(String filePath) {
+                        final File f = new File(filePath);
+                        DocNotificationManager.createUploadingNotification(MainActivity.this, f.getName());
+                        VKRequests.upload(new VKRequestCallback<Void>() {
+                            @Override
+                            public void onSuccess(Void obj) {
+                                snack(getString(R.string.upload_success, f.getName()), Snackbar.LENGTH_LONG);
+                                VKDocsSyncAdapter.syncImmediately(MainActivity.this);
+                                DocNotificationManager.dismissNotification(MainActivity.this, f.getName().hashCode());
+                            }
+
+                            @Override
+                            public void onError(VKError e) {
+                                snack(getString(R.string.upload_mistake, f.getName()), Snackbar.LENGTH_LONG);
+                                DocNotificationManager.dismissNotification(MainActivity.this, f.getName().hashCode());
+                            }
+                        }, f, f.getName());
+                    }
+                });
+        fileDialog.show();
     }
 
     private void doMySearch(String query) {
@@ -214,36 +284,76 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
     protected void onResume() {
         super.onResume();
         DocDownloaderHolder.attach(this);
+        super.onResume();
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(Drive.API)
+                    .addScope(Drive.SCOPE_FILE)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
+        }
+        mGoogleApiClient.connect();
     }
 
     private MainActivityFragment getMyDocsFragment() {
-        return MainActivityFragment.getInstance(MY_DOCS, false, "No documents found",
-                "Loading documents...");
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Documents")
+                .setAction("Choose")
+                .setLabel("My Documents")
+                .build());
+        return MainActivityFragment.getInstance(MY_DOCS, false, getString(R.string.no_docs_found),
+                getString(R.string.loading_docs), getString(R.string.my_documents_title));
     }
 
-    private MainActivityFragment getDialogDocsFragment() {
-        return MainActivityFragment.getInstance(DIALOG_DOCS, true, "No documents found",
-                "Loading documents...");
+    private MainActivityFragment getDialogDocsFragment(String title) {
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Documents")
+                .setAction("Choose")
+                .setLabel("Dialog Documents")
+                .build());
+        return MainActivityFragment.getInstance(DIALOG_DOCS, true, getString(R.string.no_docs_found),
+                getString(R.string.loading_docs), title);
     }
 
     private MainActivityFragment getDialogsFragment() {
-        return MainActivityFragment.getInstance(DIALOGS, false, "No dialogs found",
-                "Loading dialogs...");
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Documents")
+                .setAction("Choose")
+                .setLabel("Dialogs")
+                .build());
+        return MainActivityFragment.getInstance(DIALOGS, false, getString(R.string.no_dialogs_found),
+                getString(R.string.loading_dialogs), getString(R.string.dialog_documents_title));
     }
 
     private MainActivityFragment getCommunitiesFragment() {
-        return MainActivityFragment.getInstance(COMMUNITIES, false, "No communities found",
-                "Loading communities...");
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Documents")
+                .setAction("Choose")
+                .setLabel("Communities")
+                .build());
+        return MainActivityFragment.getInstance(COMMUNITIES, false, getString(R.string.no_groups_found),
+                getString(R.string.loading_groups), getString(R.string.community_documents_title));
     }
 
     private MainActivityFragment getGlobalFragment() {
-        return MainActivityFragment.getInstance(GLOBAL, false, "No communities found",
-                "Loading communities...");
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Documents")
+                .setAction("Choose")
+                .setLabel("Global")
+                .build());
+        return MainActivityFragment.getInstance(GLOBAL, false, getString(R.string.no_docs_found),
+                getString(R.string.loading_docs), getString(R.string.global_docs));
     }
 
-    private MainActivityFragment getCommunityDocsFragment() {
-        return MainActivityFragment.getInstance(COMMUNITY_DOCS, true, "No documents found",
-                "Loading documents...");
+    private MainActivityFragment getCommunityDocsFragment(String title) {
+        mTracker.send(new HitBuilders.EventBuilder()
+                .setCategory("Documents")
+                .setAction("Choose")
+                .setLabel("Community Documents")
+                .build());
+        return MainActivityFragment.getInstance(COMMUNITY_DOCS, true, getString(R.string.no_docs_found),
+                getString(R.string.loading_docs), title);
     }
 
     public Pair<CustomAdapter, CustomLoader> createAdapterAndLoader(int t) {
@@ -266,7 +376,6 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
     }
 
     private Pair<CustomAdapter, CustomLoader> getMyDocsAdapterAndLoader() {
-        //CursorDocListAdapter adapter = new CursorDocListAdapter(this, R.menu.my_docs_options, MY_DOCS);
         DocListAdapter adapter = new DocListAdapter(this, R.menu.my_docs_options, MY_DOCS);
         CustomLoader loader = MyDocsLoader.initAndGetInstance(this, adapter, mSwipeRefreshLayout, getSupportLoaderManager());
         return new Pair<>((CustomAdapter) adapter, loader);
@@ -309,7 +418,7 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
 
     private Pair<CustomAdapter, CustomLoader> getGlobalDocsAdapterAndLoader() {
         DocListAdapter adapter = new DocListAdapter(this, R.menu.global_docs_options, COMMUNITY_DOCS);
-        CustomLoader loader = new GlobalLoader(adapter, communityPeer, mSwipeRefreshLayout);
+        CustomLoader loader = new GlobalLoader(adapter, mSwipeRefreshLayout);
         return new Pair<>((CustomAdapter) adapter, loader);
     }
 
@@ -340,26 +449,22 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
 
-        // Get the SearchView and set the searchable configuration
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
 
-        // Assumes current activity is the searchable activity
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        searchView.setIconifiedByDefault(false); // Do not iconify the widget; expand it by default
+        searchView.setIconifiedByDefault(false);
 
         final MenuItem searchMI = menu.findItem(R.id.action_search);
         MenuItemCompat.setOnActionExpandListener(searchMI,
                 new MenuItemCompat.OnActionExpandListener() {
                     @Override
                     public boolean onMenuItemActionExpand(MenuItem item) {
-                        Log.w("ANNA", "Expand");
                         return true;
                     }
 
                     @Override
                     public boolean onMenuItemActionCollapse(MenuItem item) {
-                        Log.w("ANNA", "Collapse");
                         curFragment.backToList();
                         return true;
                     }
@@ -368,24 +473,26 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void updateUsername(String firstName, String lastName) {
+    private void updateUserInfo(String firstName, String lastName, String imgPath) {
         if (navigationView != null && username != null) {
-            username.setText(firstName + " " + lastName);
+            username.setText(String.format("%s %s", firstName, lastName));
+        }
+        if (imgPath.isEmpty()) {
+            Picasso.with(this)
+                    .load(R.drawable.no_photo)
+                    .resize((int) getResources().getDimension(R.dimen.image_size),
+                            (int) getResources().getDimension(R.dimen.image_size))
+                    .centerCrop()
+                    .into((ImageView) navigationView.getHeaderView(0).findViewById(R.id.profile_image));
+        } else {
+            Picasso.with(this)
+                    .load(imgPath)
+                    .resize((int) getResources().getDimension(R.dimen.image_size),
+                            (int) getResources().getDimension(R.dimen.image_size))
+                    .centerCrop()
+                    .placeholder(R.drawable.no_photo)
+                    .error(R.drawable.error)
+                    .into((ImageView) navigationView.getHeaderView(0).findViewById(R.id.profile_image));
         }
     }
 
@@ -395,56 +502,96 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
         if (!VKSdk.onActivityResult(requestCode, resultCode, data, new VKCallback<VKAccessToken>() {
             @Override
             public void onResult(VKAccessToken res) {
-                Log.w(TAG, "Authorisation result: " + res.toString());
                 final SharedPreferences.Editor e = prefs.edit();
-                e.putBoolean("login", true);
+                e.putBoolean(LOGIN, true);
                 e.commit();
                 final String firstName = prefs.getString(USER_FNAME, "");
                 final String lastName = prefs.getString(USER_LNAME, "");
+                final String pic = prefs.getString(USER_PIC, "");
                 VKDocsSyncAdapter.initializeSyncAdapter(context);
                 VKRequests.getUserInfo(new VKRequestCallback<VKApiUser>() {
                     @Override
                     public void onSuccess(VKApiUser userInfo) {
-                        if (!firstName.equals(userInfo.first_name) || !lastName.equals(userInfo.last_name)) {
-                            Log.w("ANNA", "New username " + userInfo.first_name + userInfo.last_name);
+                        if (!firstName.equals(userInfo.first_name) ||
+                                !lastName.equals(userInfo.last_name) ||
+                                !pic.equals(userInfo.photo_100)) {
                             e.putString(USER_FNAME, userInfo.first_name);
                             e.putString(USER_LNAME, userInfo.last_name);
+                            e.putString(USER_PIC, userInfo.photo_100);
                             e.putInt(USER_ID, userInfo.id);
                             e.commit();
-                            updateUsername(userInfo.first_name, userInfo.last_name);
+                            updateUserInfo(userInfo.first_name, userInfo.last_name, userInfo.photo_100);
                         }
                         userId = userInfo.id;
                     }
 
                     @Override
                     public void onError(VKError e) {
-                        Log.w("ANNA", "User info error");
+                        snack(getString(R.string.user_info_error), Snackbar.LENGTH_LONG);
                     }
                 });
             }
 
             @Override
             public void onError(VKError error) {
-                Log.w(TAG, "Authorisation error: " + error.toString());
             }
         })) {
-            super.onActivityResult(requestCode, resultCode, data);
+            if (requestCode == REQUEST_CODE_OPENER) {
+                if (resultCode == RESULT_OK) {
+                    mFileId = data.getParcelableExtra(
+                            OpenFileActivityBuilder.EXTRA_RESPONSE_DRIVE_ID);
+
+                    if (!mGoogleApiClient.isConnected()) {
+                        isWaitingForGDdownload = true;
+                        mGoogleApiClient.connect();
+                    } else {
+                        downloadFileFromDrive();
+                    }
+                }
+            } else {
+                super.onActivityResult(requestCode, resultCode, data);
+            }
         }
+    }
+
+    private void downloadFileFromDrive() {
+        isWaitingForGDdownload = false;
+        GoogleDriveDownloader.download(mGoogleApiClient, mFileId, this, new GoogleDriveDownloader.Callback() {
+            @Override
+            public void onDownloadSuccess(final File f, String name) {
+                DocNotificationManager.createUploadingNotification(MainActivity.this, f.getName());
+                VKRequests.upload(new VKRequestCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void obj) {
+                        snack(getString(R.string.upload_success, f.getName()), Snackbar.LENGTH_LONG);
+                        DocNotificationManager.dismissNotification(MainActivity.this, f.getName().hashCode());
+                        VKDocsSyncAdapter.syncImmediately(MainActivity.this);
+                    }
+
+                    @Override
+                    public void onError(VKError e) {
+                        snack(getString(R.string.upload_mistake, f.getName()), Snackbar.LENGTH_LONG);
+                        DocNotificationManager.dismissNotification(MainActivity.this, f.getName().hashCode());
+                    }
+                }, f, name);
+            }
+
+            @Override
+            public void onDownloadFail(String reason) {
+            }
+        });
     }
 
     @Override
     public void onDialogSelected(int peerId, CharSequence name) {
-        Log.w("ANNA", "on dialog selected " + peerId);
         dialogPeer = peerId;
-        toolbar.setTitle(name);
-        setFragment(getDialogDocsFragment(), false);
+        setFragment(getDialogDocsFragment(name.toString()), false);
     }
 
     @Override
     public void onCommunitySelected(int peerId, CharSequence name) {
         communityPeer = peerId;
-        toolbar.setTitle(name);
-        setFragment(getCommunityDocsFragment(), false);
+        setFragment(getCommunityDocsFragment(name.toString()), false);
     }
 
     public void snack(String text, int length) {
@@ -460,9 +607,58 @@ public class MainActivity extends AppCompatActivity implements SelectCallback,
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     DefaultDownloader.getInstance().download();
                 } else {
-                    snack("Not enough permissions to complete download", Snackbar.LENGTH_SHORT);
+                    snack(getString(R.string.lack_download_permissions), Snackbar.LENGTH_SHORT);
+                }
+            }
+            case OpenFileDialogPermissionsManager.READ_PERMISSION: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    openFileChooser();
+                } else {
+                    snack(getString(R.string.lack_download_permissions), Snackbar.LENGTH_SHORT);
                 }
             }
         }
+    }
+
+    @Override
+    protected void onPause() {
+        if (mGoogleApiClient != null) {
+            mGoogleApiClient.disconnect();
+        }
+        super.onPause();
+    }
+
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        if (isWaitingForGDdownload) {
+            downloadFileFromDrive();
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult result) {
+        if (!result.hasResolution()) {
+            GoogleApiAvailability.getInstance().getErrorDialog(this, result.getErrorCode(), 0).show();
+            return;
+        }
+
+        try {
+            result.startResolutionForResult(this, REQUEST_CODE_RESOLUTION);
+        } catch (IntentSender.SendIntentException e) {
+        }
+    }
+
+
+    public void setTitle(String name) {
+        toolbar.setTitle(name);
+    }
+
+    public ActionBarDrawerToggle getToggle() {
+        return actionBarDrawerToggle;
     }
 }

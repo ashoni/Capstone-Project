@@ -1,8 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+        <!--<color name="vk_color">#5585BC</color>-->
+        <color name="vk_grey_color">#F0F2F5</color>
+        <!--<color name="vk_white">#fff</color>-->
+        <!--<color name="vk_light_color">#A7C2DF</color>-->
+        <!--<color name="vk_clear">#0000</color>-->
+        <!--<color name="vk_black_pressed">#1000</color>-->
+        <!--<color name="vk_black">#000</color>-->
+        <!--<color name="vk_share_blue_color">#338cc9</color>-->
+        <!--<color name="vk_share_gray_line">#e5e5e5</color>-->
+        <!--<color name="vk_share_top_blue_color">#527dad</color>-->
+        <!--<color name="vk_share_link_title_color">#5477a3</color>-->
+        <!--<color name="vk_share_link_color">#9e9e9e</color>-->
+
+    <color name="colorPrimary">#5585BC</color>
+    <color name="colorPrimaryDark">#5477a3</color>
+    <color name="colorAccent">#03A9F4</color>
     <color name="white">#FFF</color>
     <color name="super_light_grey">#EEE</color>
     <color name="light_grey">#889</color>

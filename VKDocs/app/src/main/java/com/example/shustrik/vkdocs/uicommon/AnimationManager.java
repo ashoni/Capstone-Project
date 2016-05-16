@@ -1,16 +1,15 @@
 package com.example.shustrik.vkdocs.uicommon;
 
 import android.content.Context;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.PopupMenu;
 
 import com.example.shustrik.vkdocs.R;
 
+/**
+ * Provides fading animation for menu popup
+ */
 public class AnimationManager {
     private AnimationManager() {}
 

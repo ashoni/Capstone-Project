@@ -1,10 +1,9 @@
 package com.example.shustrik.vkdocs.adapters;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.example.shustrik.vkdocs.MainActivity;
 import com.example.shustrik.vkdocs.R;
 import com.example.shustrik.vkdocs.common.Utils;
 import com.example.shustrik.vkdocs.download.DocDownloader;
@@ -28,6 +28,9 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
+/**
+ * Adapter for document list
+ */
 public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewHolder>
         implements CustomAdapter, DownloadListener {
     private List<MyVKApiDocument> documents;
@@ -40,7 +43,7 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
     protected RecyclerView recyclerView;
     protected View emptyView;
     protected boolean loading;
-    private Activity activity;
+    private MainActivity activity;
     private DocDownloader docDownloader;
     private View loadingView;
     private int menuId;
@@ -51,7 +54,7 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
     private int listenerId = -1;
 
 
-    public DocListAdapter(Activity activity, int menuId, int listenerId) {
+    public DocListAdapter(MainActivity activity, int menuId, int listenerId) {
         this.activity = activity;
         this.listenerId = listenerId;
         this.docDownloader = DocDownloaderHolder.getDocDownloader(this);
@@ -60,7 +63,7 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
 
     @Override
     public void onRefreshFailed() {
-        //activity snack
+        activity.snack(activity.getString(R.string.refresh_failed), Snackbar.LENGTH_LONG);
     }
 
 
@@ -94,10 +97,8 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
     public void setLoading(boolean loading) {
         this.loading = loading;
         if (loading) {
-            Log.w("ANNA", "Set Visible " + ((TextView) (loadingView.findViewById(R.id.loading_text))).getText());
             loadingView.setVisibility(View.VISIBLE);
         } else {
-            Log.w("ANNA", "Set Gone " + ((TextView) (loadingView.findViewById(R.id.loading_text))).getText());
             loadingView.setVisibility(View.GONE);
         }
     }
@@ -136,7 +137,6 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
         holder.setDocId(docId);
         holder.getDocMenu().setDocId(docId);
         if (docId == openingDocId) {
-            Log.w("ANNA", "is opening");
             openingViewHolder = holder;
             openingViewHolder.setDownloadMode(true);
             openingViewHolder.setProgress(openingProgress);
@@ -213,10 +213,6 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
         notifyItemChanged(position);
     }
 
-    void moveToPosition(int position) {
-
-    }
-
 
     @Override
     public void onBindViewHolder(DocViewHolder holder, int position) {
@@ -247,13 +243,10 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
 
     public void addData(List<MyVKApiDocument> newDocuments) {
         if (documents == null || documents.isEmpty()) {
-            Log.w("ANNA", "empty");
             documents = new ArrayList<>();
             documents.addAll(newDocuments);
-            Log.w("ANNA", documents.size() + " ");
             notifyDataSetChanged();
         } else {
-            Log.w("ANNA", "real size" + documents.size());
             int start = documents.size();
             documents.addAll(newDocuments);
             notifyItemRangeInserted(start, newDocuments.size());
@@ -262,6 +255,8 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
 
 
     public void notifyLoadingComplete() {
+        recyclerView.setVisibility(getItemCount() != 0 ? View.VISIBLE : View.GONE);
+        emptyView.setVisibility(getItemCount() == 0 ? View.VISIBLE : View.GONE);
         loadingInProgress = false;
     }
 
@@ -279,7 +274,6 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
 
 
     public void swapData(List<MyVKApiDocument> documents) {
-        Log.w("ANNA", "swap");
         this.documents = documents;
         notifyDataSetChanged();
         recyclerView.setVisibility(getItemCount() != 0 && !loading ? View.VISIBLE : View.GONE);
@@ -320,7 +314,6 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
             cancel.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Log.w("ANNA", "cancel on click: " + title.getText());
                     docDownloader.onCancelPressed(docId);
                 }
             });
@@ -331,7 +324,6 @@ public class DocListAdapter extends RecyclerView.Adapter<DocListAdapter.DocViewH
         public void onClick(View v) {
             if (openingDocId == -1) {
                 int adapterPosition = getAdapterPosition();
-                moveToPosition(adapterPosition);
                 if (docDownloader.processToOpen(url, title.getText().toString(), docId)) {
                     openingDocId = docId;
                     openingProgress = 0;

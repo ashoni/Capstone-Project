@@ -1,7 +1,6 @@
 package com.example.shustrik.vkdocs.download;
 
-import android.app.Activity;
-import android.util.Log;
+import com.example.shustrik.vkdocs.MainActivity;
 
 public class DocDownloaderHolder {
     static DocDownloaderImpl docDownloader;
@@ -11,16 +10,15 @@ public class DocDownloaderHolder {
         docDownloader = new DocDownloaderImpl();
     }
 
-    private DocDownloaderHolder() {}
+    private DocDownloaderHolder() {
+    }
 
-    public static void attach(Activity activity) {
-        Log.w("ANNA", "Attached activity for ddholder");
+    public static void attach(MainActivity activity) {
         docDownloader.onAttach(activity);
         attached = true;
     }
 
     public static void detach() {
-        Log.w("ANNA", "Detached activity from ddholder");
         docDownloader.onDetach();
         attached = false;
     }

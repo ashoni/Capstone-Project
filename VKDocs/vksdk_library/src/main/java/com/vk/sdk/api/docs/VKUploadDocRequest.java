@@ -1,5 +1,7 @@
 package com.vk.sdk.api.docs;
 
+import android.util.Log;
+
 import com.vk.sdk.api.VKApi;
 import com.vk.sdk.api.VKApiConst;
 import com.vk.sdk.api.VKParameters;
@@ -11,8 +13,18 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.util.Map;
 
 public class VKUploadDocRequest extends VKUploadDocBase {
+    private String title;
+
+    public VKUploadDocRequest(File doc, String title) {
+        super();
+        this.mDoc = doc;
+        this.mGroupId = 0;
+        this.title = title;
+        Log.w("ANNA", "set title " + title);
+    }
     /**
      * Creates a VKUploadDocRequest instance.
      * @param doc file for upload to server
@@ -21,6 +33,7 @@ public class VKUploadDocRequest extends VKUploadDocBase {
         super();
         this.mDoc = doc;
         this.mGroupId = 0;
+        Log.w("ANNA", "Doc constructor");
     }
 
     /**
@@ -30,6 +43,7 @@ public class VKUploadDocRequest extends VKUploadDocBase {
      */
     public VKUploadDocRequest(File doc, long groupId) {
         super();
+        Log.w("ANNA", "group constructor");
         this.mDoc = doc;
         this.mGroupId = groupId;
     }
@@ -44,8 +58,15 @@ public class VKUploadDocRequest extends VKUploadDocBase {
     @Override
     protected VKRequest getSaveRequest(JSONObject response) {
         VKRequest saveRequest;
+        Log.w("ANNA", "get save request");
         try {
-            saveRequest = VKApi.docs().save(new VKParameters(VKJsonHelper.toMap(response)));
+            Map<String, Object> params = VKJsonHelper.toMap(response);
+            if (title != null && !title.isEmpty()) {
+                params.put("title", title);
+                Log.w("ANNA", params.toString());
+                Log.w("ANNA", "title is " + params.toString());
+            }
+            saveRequest = VKApi.docs().save(new VKParameters(params));
         } catch (JSONException e) {
             return null;
         }

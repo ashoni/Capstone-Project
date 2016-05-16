@@ -21,6 +21,8 @@
 
 package com.vk.sdk.api;
 
+import android.util.Log;
+
 import com.vk.sdk.VKSdk;
 import com.vk.sdk.api.httpClient.VKAbstractOperation;
 import com.vk.sdk.api.httpClient.VKHttpClient;
@@ -90,6 +92,7 @@ public abstract class VKUploadBase extends VKRequest {
             };
             setState(VKOperationState.Executing);
             VKRequest serverRequest = getServerRequest();
+            Log.w("ANNA", "Setting server request");
             serverRequest.setRequestListener(new VKUploadRequestListener());
             lastOperation = serverRequest.getOperation();
             VKHttpClient.enqueueOperation(lastOperation);
@@ -118,12 +121,14 @@ public abstract class VKUploadBase extends VKRequest {
             public void onComplete(VKResponse response) {
                 try {
                     String uploadUrl = response.json.getJSONObject("response").getString("upload_url");
+                    Log.w("ANNA", uploadUrl);
                     VKJsonOperation postFileRequest = getUploadOperation(uploadUrl);
+                    Log.w("ANNA", "Posting");
                     postFileRequest.setHttpOperationListener(new VKJSONOperationCompleteListener() {
                         @Override
                         public void onComplete(VKJsonOperation operation,
                                                JSONObject response) {
-
+                            Log.w("ANNA", "Post request completed, saving");
                             VKRequest saveRequest = getSaveRequest(response);
                             saveRequest.setRequestListener(new VKRequestListener() {
                                 @Override
@@ -131,11 +136,13 @@ public abstract class VKUploadBase extends VKRequest {
                                     if (requestListener != null) {
                                         requestListener.onComplete(response);
                                     }
+                                    Log.w("ANNA", response.json.toString());
                                     setState(VKOperationState.Finished);
                                 }
 
                                 @Override
                                 public void onError(VKError error) {
+                                    Log.w("ANNA", "save error: " + error.errorMessage);
                                     if (requestListener != null) {
                                         requestListener.onError(error);
                                     }

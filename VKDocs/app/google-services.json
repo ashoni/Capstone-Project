@@ -1,0 +1,43 @@
+{
+  "project_info": {
+    "project_number": "161874167595",
+    "project_id": "vkdocs-bd16c"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:161874167595:android:186ee7bb5eb2314f",
+        "android_client_info": {
+          "package_name": "com.example.shustrik.vkdocs"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "161874167595-h25cvho1l2lara7ihe2p2ueevh030sm3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.shustrik.vkdocs",
+            "certificate_hash": "7AC908C0BA7993FFA06BF6B9C03A1A016C7AC046"
+          }
+        }
+      ],
+      "api_key": [],
+      "services": {
+        "analytics_service": {
+          "status": 2,
+          "analytics_property": {
+            "tracking_id": "UA-76040350-2"
+          }
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

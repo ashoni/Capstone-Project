@@ -2,7 +2,6 @@ package com.example.shustrik.vkdocs.menus;
 
 import android.app.Activity;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,13 +19,14 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
+/**
+ * Adapter for custom menu view
+ */
 class MenuAdapter extends ArrayAdapter<MenuItem> {
     private int layoutResourceId;
     private List<MenuItem> data;
     private Activity activity;
     private DocItemMenuListener listener;
-    //private MenuViewHolder offlineHolder;
-//    private boolean isOffline;
     private DocMenu docMenu;
 
     public MenuAdapter(Activity activity,
@@ -41,7 +41,6 @@ class MenuAdapter extends ArrayAdapter<MenuItem> {
         this.listener = listener;
         this.docMenu = docMenu;
     }
-
 
 
     @Override
@@ -66,10 +65,6 @@ class MenuAdapter extends ArrayAdapter<MenuItem> {
         return convertView;
     }
 
-//    public void setOffline(boolean isOffline) {
-//        offlineHolder.setOfflineAvailable(isOffline);
-//    }
-
     class MenuViewHolder {
         @Bind(R.id.icon)
         ImageView icon;
@@ -86,12 +81,10 @@ class MenuAdapter extends ArrayAdapter<MenuItem> {
             ButterKnife.bind(this, view);
 
             if (isCheckable) {
-//                offlineHolder = this;
                 checkableSwitch.setVisibility(View.VISIBLE);
                 checkableSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Log.w("ANNA", "On checked " + isChecked);
                         listener.onClick(menuId, isChecked);
                     }
                 });
@@ -101,7 +94,6 @@ class MenuAdapter extends ArrayAdapter<MenuItem> {
                     public void onClick(View v) {
                         isOffline = !isOffline;
                         checkableSwitch.setChecked(isOffline);
-//                        listener.onClick(menuId, isOffline);
                     }
                 });
             } else {

@@ -8,13 +8,13 @@ import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SyncRequest;
 import android.content.SyncResult;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 
 import com.example.shustrik.vkdocs.MainActivity;
 import com.example.shustrik.vkdocs.R;
@@ -45,8 +45,6 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
             "com.example.shustrik.vkdocs.app.ACTION_GROUPS_UPDATED";
     public static final String ACTION_DIALOGS_UPDATED =
             "com.example.shustrik.vkdocs.app.ACTION_DIALOGS_UPDATED";
-    // Interval at which to sync with the weather, in seconds.
-    // 60 seconds (1 minute) * 180 = 3 hours
     public static final int SYNC_INTERVAL = 60 * 180;
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL / 3;
 
@@ -62,8 +60,6 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority,
                               ContentProviderClient provider, SyncResult syncResult) {
-        Log.d("ANNA", "----------------------------------------------------------Starting sync");
-
         final SharedPreferences prefs = context.getSharedPreferences(MainActivity.PREFS, Context.MODE_PRIVATE);
 
         VKRequests.getDocs(new VKRequestCallback<MyVKDocsArray>() {
@@ -96,12 +92,11 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
                 if (MyDocsLoader.getInstance() != null) {
                     MyDocsLoader.getInstance().onSyncUpdate(true);
                 }
+                updateWidgets();
             }
 
             @Override
             public void onError(VKError e) {
-                Log.w("ANNA", "Load mydocs error: " + e);
-
                 if (MyDocsLoader.getInstance() != null) {
                     MyDocsLoader.getInstance().onSyncUpdate(false);
                 }
@@ -111,7 +106,6 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
         VKRequests.getCommunities(new VKRequestCallback<VKApiCommunityArray>() {
             @Override
             public void onSuccess(VKApiCommunityArray communityArray) {
-                Log.w("ANNA", "sync :: comm :: got :: " + communityArray.size());
                 Set<String> oldIds = prefs.getStringSet("group_ids", new HashSet<String>());
                 Set<String> newIds = new HashSet<>();
 
@@ -122,16 +116,13 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
                         cVVector.add(DBConverter.parseIntoValues(community, prefs.getInt(MainActivity.USER_ID, 0)));
                     }
                 }
-                Log.w("ANNA", "sync :: comm :: new ::" + newIds.size() + " old :: " + oldIds.size());
                 insertToDb(cVVector, DocsContract.CommunityEntry.CONTENT_URI);
                 oldIds.removeAll(newIds);
-                Log.w("ANNA", "sync :: old: " + oldIds.size());
                 for (String id : oldIds) {
                     deleteGroupFromDB(id);
                 }
                 SharedPreferences.Editor e = prefs.edit();
                 e.putStringSet("group_ids", newIds);
-                Log.w("ANNA", "sync group success: " + newIds.size());
                 e.commit();
                 if (CommunitiesLoader.getInstance() != null) {
                     CommunitiesLoader.getInstance().onSyncUpdate(true);
@@ -140,7 +131,6 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
 
             @Override
             public void onError(VKError e) {
-                Log.w("ANNA", "Sync group error");
                 if (CommunitiesLoader.getInstance() != null) {
                     CommunitiesLoader.getInstance().onSyncUpdate(false);
                 }
@@ -158,7 +148,6 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
                     }
                     insertToDb(cVVector, DocsContract.DialogEntry.CONTENT_URI);
                 }
-                Log.w("ANNA", "Dialogs sync: " + isSuccess);
                 if (DialogsLoader.getInstance() != null) {
                     DialogsLoader.getInstance().onSyncUpdate(isSuccess);
                 }
@@ -167,32 +156,20 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
 
-//    private void sendBroadcast(String name, boolean isSuccess) {
-//        Intent dataUpdatedIntent = new Intent(name).setPackage(context.getPackageName());
-//        dataUpdatedIntent.putExtra("result", isSuccess ? "success" : "fail");
-//        context.sendBroadcast(dataUpdatedIntent);
-//    }
-
-
     private void insertToDb(Vector<ContentValues> cVVector, Uri uri) {
         if (cVVector.size() > 0) {
             ContentValues[] cvArray = new ContentValues[cVVector.size()];
             cVVector.toArray(cvArray);
             contentResolver.bulkInsert(uri, cvArray);
-            //notify anybody
         }
     }
 
 
-    /**
-     * All or title only?
-     */
     private void updateDb(MyVKApiDocument doc) {
         ContentValues cv = new ContentValues();
         cv.put(DocsContract.DocumentEntry.COLUMN_TITLE, doc.title);
         contentResolver.update(DocsContract.DocumentEntry.CONTENT_URI,
                 cv, DocsContract.DocumentEntry._ID + "=" + doc.id, null);
-        //notify anybody
     }
 
 
@@ -211,14 +188,10 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
                 null, null);
     }
 
-    /**
-     * Helper method to schedule the sync adapter periodic execution
-     */
     public static void configurePeriodicSync(Context context, int syncInterval, int flexTime) {
         Account account = getSyncAccount(context);
         String authority = context.getString(R.string.content_authority);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            // we can enable inexact timers in our periodic sync
             SyncRequest request = new SyncRequest.Builder().
                     syncPeriodic(syncInterval, flexTime).
                     setSyncAdapter(account, authority).
@@ -230,11 +203,6 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    /**
-     * Helper method to have the sync adapter sync immediately
-     *
-     * @param context The context used to access the account service
-     */
     public static void syncImmediately(Context context) {
         Bundle bundle = new Bundle();
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
@@ -243,39 +211,18 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
                 context.getString(R.string.content_authority), bundle);
     }
 
-    /**
-     * Helper method to get the fake account to be used with SyncAdapter, or make a new one
-     * if the fake account doesn't exist yet.  If we make a new account, we call the
-     * onAccountCreated method so we can initialize things.
-     *
-     * @param context The context used to access the account service
-     * @return a fake account.
-     */
     public static Account getSyncAccount(Context context) {
-        // Get an instance of the Android account manager
         AccountManager accountManager =
                 (AccountManager) context.getSystemService(Context.ACCOUNT_SERVICE);
 
-        // Create the account type and default account
         Account newAccount = new Account(
                 context.getString(R.string.app_name), context.getString(R.string.sync_account_type));
 
-        // If the password doesn't exist, the account doesn't exist
         if (null == accountManager.getPassword(newAccount)) {
 
-        /*
-         * Add the account and account type, no password or user data
-         * If successful, return the Account object, otherwise report an error.
-         */
             if (!accountManager.addAccountExplicitly(newAccount, "", null)) {
                 return null;
             }
-            /*
-             * If you don't set android:syncable="true" in
-             * in your <provider> element in the manifest,
-             * then call ContentResolver.setIsSyncable(account, AUTHORITY, 1)
-             * here.
-             */
 
             onAccountCreated(newAccount, context);
         }
@@ -283,23 +230,17 @@ public class VKDocsSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private static void onAccountCreated(Account newAccount, Context context) {
-        /*
-         * Since we've created an account
-         */
         VKDocsSyncAdapter.configurePeriodicSync(context, SYNC_INTERVAL, SYNC_FLEXTIME);
-
-        /*
-         * Without calling setSyncAutomatically, our periodic sync will not be enabled.
-         */
         ContentResolver.setSyncAutomatically(newAccount, context.getString(R.string.content_authority), true);
-
-        /*
-         * Finally, let's do a sync to get things started
-         */
         syncImmediately(context);
     }
 
     public static void initializeSyncAdapter(Context context) {
         getSyncAccount(context);
+    }
+
+    private void updateWidgets() {
+        Intent dataUpdatedIntent = new Intent(ACTION_DOCS_UPDATED).setPackage(context.getPackageName());
+        context.sendBroadcast(dataUpdatedIntent);
     }
 }

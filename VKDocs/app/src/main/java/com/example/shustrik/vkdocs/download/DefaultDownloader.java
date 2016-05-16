@@ -12,9 +12,14 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 
+import com.example.shustrik.vkdocs.R;
+
 import java.util.LinkedList;
 import java.util.Queue;
 
+/**
+ * Calls default download activity
+ */
 public class DefaultDownloader {
     public static final int DOWNLOAD_PERMISSION = 19;
     private final Queue<DownloadManager.Request> requests = new LinkedList<>();
@@ -53,7 +58,7 @@ public class DefaultDownloader {
                 != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(activity,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                showMessage("You need to allow writing to the external storage to complete download",
+                showMessage(activity.getString(R.string.ask_for_download_permission),
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -78,8 +83,8 @@ public class DefaultDownloader {
     private void showMessage(String message, DialogInterface.OnClickListener okListener) {
         new AlertDialog.Builder(activity)
                 .setMessage(message)
-                .setPositiveButton("OK", okListener)
-                .setNegativeButton("Cancel", null)
+                .setPositiveButton(activity.getString(R.string.ok), okListener)
+                .setNegativeButton(activity.getString(R.string.cancel), null)
                 .create()
                 .show();
     }

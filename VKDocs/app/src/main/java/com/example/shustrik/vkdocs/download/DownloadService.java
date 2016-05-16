@@ -1,45 +1,42 @@
 package com.example.shustrik.vkdocs.download;
 
 import android.app.IntentService;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ResultReceiver;
-import android.util.Log;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-/**
- * Asynctask? DownloadManager?
- */
+
 public class DownloadService extends IntentService {
     public static final int UPDATE_PROGRESS = 8344;
     public static final int NOTIFY_READY = 7255;
     public static final int NOTIFY_CANCELLED = 6166;
+    public static final int NOTIFY_FAILED = 8111;
     public static final String PROGRESS = "progress";
     public static final String RECEIVER = "receiver";
     public static final String FILE = "file";
     public static final String URL = "url";
+    public static final String DS_NAME = "Download Service";
 
     private final IBinder mBinder = new LocalBinder();
     private boolean cancelled = false;
 
     public DownloadService() {
-        super("DownloadService");
+        super(DS_NAME);
     }
 
     public static File getTempFile(int docId, String title, Context context) {
-        return new File(context.getFilesDir(), String.format("%d_%s",docId, title));
+        return new File(context.getFilesDir(), String.format("%d_%s", docId, title));
     }
 
     @Override
@@ -66,7 +63,7 @@ public class DownloadService extends IntentService {
             OutputStream output = openFileOutput(file, Context.MODE_WORLD_READABLE);
 
             byte data[] = new byte[1024];
-            int count;
+            int count = 0;
 
             while (!cancelled && (count = input.read(data)) != -1) {
                 total += count;
@@ -81,12 +78,10 @@ public class DownloadService extends IntentService {
             output.close();
             input.close();
         } catch (IOException e) {
-            //RECEIVER SEND FAIL
             e.printStackTrace();
+            receiver.send(NOTIFY_FAILED, new Bundle());
         }
-        Log.w("ANNA", "cancel here");
         if (cancelled) {
-            Log.w("ANNA", "Cancelled");
             File f = new File(file);
             f.delete();
             receiver.send(NOTIFY_CANCELLED, new Bundle());
@@ -96,7 +91,6 @@ public class DownloadService extends IntentService {
     }
 
     public void cancel() {
-        Log.w("ANNA", "cancel download service");
         cancelled = true;
     }
 

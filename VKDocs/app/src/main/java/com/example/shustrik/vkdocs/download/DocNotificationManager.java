@@ -15,46 +15,47 @@ public class DocNotificationManager {
     private DocNotificationManager() {
     }
 
-    public static void createNotification(Context context, String title, int docId) {
+    public static void createUploadingNotification(Context context, String title) {
+        createNotification(context, context.getString(R.string.upload_to_vk_notification, title),
+                title.hashCode(),
+                R.drawable.ic_file_upload_black_24dp);
+    }
+
+    public static void createDownloadingNotification(Context context, String title, int docId) {
+        createNotification(context, context.getString(R.string.making_offline_notification, title),
+                docId,
+                R.drawable.ic_file_download_black_24dp);
+    }
+
+    private static void createNotification(Context context, String text, int notificationId, int iconId) {
         NotificationManager notificationManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         PendingIntent contentIntent =
                 PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class), 0);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
-                .setSmallIcon(R.drawable.ic_file_download_black_24dp)
+                .setSmallIcon(iconId)
                 .setContentIntent(contentIntent);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            builder = builder.setContent(getComplexNotificationView(context, title));
+            builder = builder.setContent(getComplexNotificationView(context, text));
         } else {
-            builder = builder.setContentTitle("Making " + title + " available offline");
+            builder = builder.setContentTitle(text);
         }
 
-//        Bitmap largeIcon = BitmapFactory.decodeResource(this.getResources(), R.drawable.art_storm);
-//        NotificationCompat.Builder mBuilder =
-//                new NotificationCompat.Builder(context)
-//
-//                        .setSmallIcon(R.drawable.art_clear)
-//                        .setLargeIcon(largeIcon)
-//                        .setContentTitle("Weather Alert!")
-//                        .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
-//                        .setContentText(message)
-//                        .setPriority(NotificationCompat.PRIORITY_HIGH);
-//        mBuilder.setContentIntent(contentIntent);
-        notificationManager.notify(docId, builder.build());
+        notificationManager.notify(notificationId, builder.build());
     }
 
 
-    private static RemoteViews getComplexNotificationView(Context context, String title) {
+    private static RemoteViews getComplexNotificationView(Context context, String text) {
         RemoteViews notificationView = new RemoteViews(context.getPackageName(), R.layout.loading_notification);
-        notificationView.setTextViewText(R.id.loading_title, "Making " + title + " available offline");
+        notificationView.setTextViewText(R.id.loading_title, text);
         return notificationView;
     }
 
-    public static void dismissNotification(Context context, int docId) {
+    public static void dismissNotification(Context context, int notificationId) {
         NotificationManager notificationManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(docId);
+        notificationManager.cancel(notificationId);
     }
 }

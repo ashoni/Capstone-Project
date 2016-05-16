@@ -7,6 +7,9 @@ import com.example.shustrik.vkdocs.vk.MyVKApiDialog;
 import com.example.shustrik.vkdocs.vk.MyVKApiDocument;
 import com.vk.sdk.api.model.VKApiCommunity;
 
+/**
+ * Holds constants for DB operations, parses entities to ContentValues
+ */
 public class DBConverter {
     public static final String[] DOC_CONST_COLUMNS = {
             DocsContract.DocumentEntry.TABLE_NAME + "." + DocsContract.DocumentEntry._ID,
@@ -69,7 +72,6 @@ public class DBConverter {
     public static final int COL_DIALOG_TITLE = 1;
     public static final int COL_DIALOG_PREVIEW = 2;
 
-    //Использовать при синхронизации
     public static ContentValues parseIntoValues(MyVKApiDocument doc) {
         ContentValues docsValues = new ContentValues();
         docsValues.put(DocsContract.DocumentEntry._ID, doc.id);

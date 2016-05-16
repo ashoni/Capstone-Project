@@ -8,7 +8,6 @@
     <!-- https://vk.com/editapp?id=5285245&section=options -->
     <integer name="com_vk_sdk_AppId">5285245</integer>
 
-    <!-- SyncAdapter related -->
     <string name="sync_account_type">vkdocs.shustrik.example.com</string>
     <string name="content_authority">com.example.shustrik.vkdocs</string>
     <string name="pref_name">settings</string>
@@ -19,4 +18,51 @@
     <string name="global_docs">Global documents</string>
     <string name="app_label">VKSearchDocs</string>
     <string name="search_hint">Search</string>
+    <string name="widget_title">VKDocs</string>
+    <string name="lack_download_permissions">Not enough permissions to complete download</string>
+    <string name="upload_mistake">%s wasn\'t uploaded to VK due to server error</string>
+    <string name="upload_success">%s was uploaded to VK</string>
+    <string name="user_info_error">Can\'t retrieve the user information</string>
+    <string name="my_documents_title">My Documents</string>
+    <string name="dialog_documents_title">Dialogs</string>
+    <string name="community_documents_title">Communities</string>
+    <string name="no_docs_found">No documents found</string>
+    <string name="loading_docs">Loading documents&#8230;</string>
+    <string name="no_groups_found">No communities found</string>
+    <string name="loading_groups">Loading groups&#8230;</string>
+    <string name="no_dialogs_found">No dialogs found</string>
+    <string name="loading_dialogs">Loading dialogs&#8230;</string>
+    <string name="refresh_failed">Refresh failed, please check the Internet connection</string>
+    <string name="add_new_error">Unable to add new document</string>
+    <string name="ask_for_download_permission">Allow writing to the external storage to complete download</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="download_failed">Download failed</string>
+    <string name="open_concurrent">Another file is opening</string>
+    <string name="upload_to_vk_notification">Uploading %s to VK</string>
+    <string name="making_offline_notification">Making %s available offline</string>
+    <string name="file_reading_error">File reading error</string>
+    <string name="server_error">Can\'t get information from the server</string>
+    <string name="delete_failure">Unable to delete %s</string>
+    <string name="share">Share</string>
+    <string name="ask_browse_permissions">Allow reading the external storage to browse files</string>
+    <string name="share_link">Share link</string>
+    <string name="add_to_my_docs">Add to My Docs</string>
+    <string name="download">Download</string>
+    <string name="rename">Rename</string>
+    <string name="remove">Remove</string>
+    <string name="available_offline">Available offline</string>
+    <string name="dialog_icon">Dialog icon</string>
+    <string name="no_name">No name</string>
+    <string name="doc_icon">Document icon</string>
+    <string name="doc_menu">Document menu</string>
+    <string name="drive_icon">Google Drive Icon</string>
+    <string name="drive_label">Google Drive</string>
+    <string name="files">Files</string>
+    <string name="loading_file">Loading file…</string>
+    <string name="document_icon">Document icon</string>
+    <string name="rename_document">Rename document</string>
+    <string name="query_me">Query me</string>
+    <string name="widget_name">VK Documents</string>
+    <string name="add_success">%s added successfully</string>
 </resources>

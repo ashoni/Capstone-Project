@@ -1,40 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
     <group android:id="@+id/share_group">
         <item
             android:id="@+id/doc_share_link"
             android:icon="@drawable/ic_insert_link_black_24dp"
-            android:title="Share link" />
-        <item
-            android:id="@+id/doc_share"
-            android:icon="@drawable/ic_share_black_24dp"
-            android:title="Send file" />
+            android:title="@string/share_link" />
+        <!--<item-->
+            <!--android:id="@+id/doc_share"-->
+            <!--android:icon="@drawable/ic_share_black_24dp"-->
+            <!--android:title="Send file" />-->
     </group>
 
-    <!-- Line -->
-    <!-- add and available offline? -->
     <group android:id="@+id/manage_group">
         <item
             android:id="@+id/doc_add"
             android:icon="@drawable/ic_add_black_24dp"
-            android:title="Add to My Docs" />
+            android:title="@string/add_to_my_docs" />
         <item
             android:id="@+id/doc_download"
             android:icon="@drawable/ic_file_download_black_24dp"
-            android:title="Download" />
+            android:title="@string/download" />
         <item
             android:id="@+id/doc_rename"
             android:icon="@drawable/ic_border_color_black_24dp"
-            android:title="Rename" />
+            android:title="@string/rename" />
     </group>
-
-    <!-- Line -->
 
     <group android:id="@+id/delete_group">
         <item
             android:id="@+id/doc_delete"
             android:icon="@drawable/ic_delete_black_24dp"
-            android:title="Remove" />
+            android:title="@string/remove" />
     </group>
 </menu>

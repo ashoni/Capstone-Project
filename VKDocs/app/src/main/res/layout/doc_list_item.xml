@@ -11,6 +11,7 @@
     android:id="@+id/list_item_grid">
 
     <ImageView
+        android:contentDescription="@string/doc_icon"
         android:id="@+id/list_item_preview"
         android:layout_width="0dp"
         android:adjustViewBounds="true"
@@ -26,13 +27,13 @@
         android:id="@+id/list_item_title"
         android:layout_width="0dp"
         android:layout_margin="@dimen/doc_list_item_margin"
-        android:text="Obeshanie1.docx"
         style="@style/CaptionText"
         app:layout_columnSpan="2"
         app:layout_columnWeight="8"
         app:layout_gravity="center_vertical"/>
 
     <ImageView
+        android:contentDescription="@string/doc_menu"
         android:id="@+id/menu_overflow"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -47,7 +48,6 @@
         android:id="@+id/list_item_date"
         android:layout_width="0dp"
         android:layout_margin="@dimen/doc_list_item_margin"
-        android:text="10.10.2015"
         style="@style/SmallText"
         app:layout_columnWeight="4" />
 
@@ -55,41 +55,44 @@
         android:id="@+id/list_item_size"
         android:layout_width="0dp"
         android:layout_margin="@dimen/doc_list_item_margin"
-        android:text="245Kb"
         style="@style/SmallText"
         android:gravity="end"
         app:layout_columnWeight="4" />
 
     <!-- Возможно, стоит вынести ProgressBar из GridLayout или объединить чем-то  progress и cancel,
     иначе во время загрузки иконка меню съезжает-->
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-        android:visibility="gone"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/doc_list_item_margin"
-        android:layout_marginBottom="@dimen/doc_list_item_margin"
-        android:layout_marginStart="@dimen/doc_list_item_margin"
-        android:layout_marginEnd="@dimen/doc_list_item_padding"
-        android:indeterminate="false"
-        android:max="100"
-        android:progress="0"
-        app:layout_columnWeight="12"
-        app:layout_columnSpan="3"/>
-    <!--android:indeterminate="true"-->
+        app:layout_columnSpan="4"
+        android:orientation="horizontal">
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:visibility="gone"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/doc_list_item_margin"
+            android:layout_marginBottom="@dimen/doc_list_item_margin"
+            android:layout_marginStart="@dimen/doc_list_item_margin"
+            android:layout_marginEnd="@dimen/doc_list_item_padding"
+            android:indeterminate="false"
+            android:max="100"
+            android:progress="0"/>
 
-    <TextView
-        android:id="@+id/cancel_loading"
-        android:layout_width="0dp"
-        android:layout_height="20dp"
-        android:layout_marginStart="@dimen/doc_list_item_margin"
-        android:layout_marginEnd="@dimen/doc_list_item_margin"
-        android:layout_marginTop="@dimen/doc_list_item_margin"
-        android:text="Cancel"
-        android:visibility="gone"
-        android:gravity="center"
-        style="@style/SmallText"
-        app:layout_columnWeight="4" />
+        <TextView
+            android:id="@+id/cancel_loading"
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:layout_marginTop="@dimen/doc_list_item_margin"
+            android:paddingEnd="10dp"
+            android:paddingStart="10dp"
+            android:text="@string/cancel"
+            android:visibility="gone"
+            android:gravity="center"
+            style="@style/SmallText"/>
+    </LinearLayout>
+
 
 </android.support.v7.widget.GridLayout>

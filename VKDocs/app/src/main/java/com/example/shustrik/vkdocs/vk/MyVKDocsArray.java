@@ -6,6 +6,9 @@ import com.vk.sdk.api.model.VKList;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * List of MyVKApiDocument objects
+ */
 public class MyVKDocsArray extends VKList<MyVKApiDocument> {
     private Integer total;
 

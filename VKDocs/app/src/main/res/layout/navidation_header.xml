@@ -1,35 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Подумать над рисунком-->
-<!-- android:background="@drawable/background_material" -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="190dp"
     android:background="@color/colorPrimaryDark"
     android:orientation="vertical">
 
-    <!-- Нужно ли выделять картинку контуром -->
-    <!-- Размер картинки возможно, стоит исходить из preview-130, preview-100 -->
-    <ImageView
+    <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/profile_image"
-        android:layout_width="76dp"
-        android:layout_height="76dp"
-        android:layout_centerVertical="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="24dp" />
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:src="@drawable/error"
+        android:layout_centerInParent="true"
+        android:layout_marginStart="24dp"/>
 
-    <!-- Переделать стиль текста, TextAppearance title, что-то такое -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Annushka"
-        android:textSize="14sp"
-        android:textColor="#FFF"
-        android:textStyle="bold"
-        android:gravity="start"
+        style="@style/WhiteCaptionText"
+        android:layout_centerHorizontal="true"
         android:paddingBottom="4dp"
         android:layout_marginBottom="8dp"
         android:layout_alignParentBottom="true"
-        android:id="@+id/nav_username"
-        android:layout_alignStart="@+id/profile_image" />
+        android:id="@+id/nav_username"/>
 
 </RelativeLayout>

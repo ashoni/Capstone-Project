@@ -1,7 +1,6 @@
 package com.example.shustrik.vkdocs.vk;
 
 import android.app.Activity;
-import android.util.Log;
 
 import com.example.shustrik.vkdocs.common.Utils;
 import com.vk.sdk.VKSdk;
@@ -10,16 +9,9 @@ import com.vk.sdk.api.VKError;
 import com.vk.sdk.api.VKParameters;
 import com.vk.sdk.api.VKRequest;
 import com.vk.sdk.api.VKResponse;
-import com.vk.sdk.api.methods.VKApiGroups;
-import com.vk.sdk.api.model.VKApiCommunity;
 import com.vk.sdk.api.model.VKApiCommunityArray;
-import com.vk.sdk.api.model.VKApiDialog;
-import com.vk.sdk.api.model.VKApiDocument;
 import com.vk.sdk.api.model.VKApiUser;
-import com.vk.sdk.api.model.VKAttachments;
-import com.vk.sdk.api.model.VKDocsArray;
 import com.vk.sdk.api.model.VKUsersArray;
-import com.vk.sdk.api.model.VKWallPostResult;
 
 import org.json.JSONException;
 
@@ -28,9 +20,7 @@ import java.util.List;
 
 
 /**
- * THINK OF
- * a) implement your own Optional and Either
- * b) http://tools.android.com/tech-docs/new-build-system/resource-shrinking
+ * Wrapper for VK Api
  */
 public class VKRequests {
 
@@ -43,14 +33,12 @@ public class VKRequests {
     }
 
 
-    //Заменить названия полей на константы из классов
     public static void getUserInfo(List<Integer> userIds, final VKRequestCallback<VKUsersArray> callback) {
         VKRequest request = new VKRequest("users.get",
                 VKParameters.from("user_ids", Utils.join(userIds), "fields", "photo_200"));
         request.executeWithListener(new MyVKRequestListener(callback) {
             @Override
             public void onComplete(VKResponse response) {
-                Log.d("ANNA", "User Info Response " + response.json.toString());
                 VKUsersArray vkUsersArray = new VKUsersArray();
                 try {
                     vkUsersArray.parse(response.json);
@@ -78,7 +66,6 @@ public class VKRequests {
         request.executeWithListener(new MyVKRequestListener(callback) {
             @Override
             public void onComplete(VKResponse response) {
-                Log.d("ANNA", "User Info Response " + response.json.toString());
                 VKUsersArray vkUsersArray = new VKUsersArray();
                 try {
                     vkUsersArray.parse(response.json);
@@ -130,7 +117,6 @@ public class VKRequests {
         request.executeWithListener(new MyVKRequestListener(callback) {
             @Override
             public void onComplete(VKResponse response) {
-                Log.w("ANNA", "Get docs response: " + response.json.toString());
                 MyVKDocsArray vkDocsArray = new MyVKDocsArray();
                 try {
                     vkDocsArray.parse(response.json);
@@ -151,7 +137,6 @@ public class VKRequests {
         request.executeWithListener(new MyVKRequestListener(callback) {
             @Override
             public void onComplete(VKResponse response) {
-                Log.w("ANNA", "Get wall docs response: " + response.json.toString());
                 try {
                     callback.onSuccess(MyVKApiDocument.getDocsFromWall(response.json));
                 } catch (Exception e) {
@@ -173,7 +158,6 @@ public class VKRequests {
         request.executeWithListener(new MyVKRequestListener(callback) {
             @Override
             public void onComplete(VKResponse response) {
-                Log.w("ANNA", "Get dialogs response" + response.responseString);
                 MyVKDialogsArray vkDialogsArray = new MyVKDialogsArray();
                 try {
                     vkDialogsArray.parse(response.json);
@@ -193,11 +177,9 @@ public class VKRequests {
         VKRequest request = new VKRequest("messages.getHistoryAttachments",
                 VKParameters.from("peer_id", peerId, "media_type", "doc",
                         "start_from", startFrom, "count", count));
-        Log.w("ANNA", request.toString());
         request.executeWithListener(new MyVKRequestListener(callback) {
             @Override
             public void onComplete(VKResponse response) {
-                Log.w("ANNA", "Attachments Response "  + response.json.toString());
                 try {
                     callback.onSuccess(MyVKApiDocument.getDocsFromAttachments(response.json));
                 } catch (Exception e) {
@@ -211,11 +193,9 @@ public class VKRequests {
                                     String q, int offset, int count) {
         final VKRequest request = new VKRequest("docs.search",
                 VKParameters.from("q", q, "offset", offset, "count", count));
-        Log.w("ANNA", q + " " + offset + " " + count);
         request.executeWithListener(new MyVKRequestListener(callback) {
             @Override
             public void onComplete(VKResponse response) {
-                Log.w("ANNA", "Global search Response " + response.json.toString());
                 MyVKDocsArray vkDocsArray = new MyVKDocsArray();
                 try {
                     vkDocsArray.parse(response.json);
@@ -233,7 +213,6 @@ public class VKRequests {
         request.executeWithListener(new MyVKRequestListener(callback) {
             @Override
             public void onComplete(VKResponse response) {
-                Log.d("ANNA", "get communities Response " + response.json.toString());
                 VKApiCommunityArray vkApiCommunityArray = new VKApiCommunityArray();
                 try {
                     vkApiCommunityArray.parse(response.json);
@@ -264,31 +243,12 @@ public class VKRequests {
     }
 
 
-    public static void upload(final VKRequestCallback<VKAttachments> callback, File doc) {
-        VKRequest request = VKApi.docs().uploadDocRequest(doc);
-    }
-
-    public static void uploadToGroup(final VKRequestCallback<VKAttachments> callback,
-                                     File doc, long groupId) {
-        VKRequest request = VKApi.docs().uploadDocRequest(doc, groupId);
-    }
-
-    /**
-     * Если не работает, перечитать исходники, лучше отдебажить. Там несколько операций, но вроде
-     * как они все реализованы.
-     */
-    private static void upload(VKRequest request, final VKRequestCallback<VKDocsArray> callback) {
+    public static void upload(final VKRequestCallback<Void> callback, File doc, String title) {
+        VKRequest request = VKApi.docs().uploadDocRequest(doc, title);
         request.executeWithListener(new MyVKRequestListener(callback) {
             @Override
             public void onComplete(VKResponse response) {
-                Log.d("ANNA", "upload Response "  + response.json.toString());
-                VKDocsArray vkDocsArray = new VKDocsArray();
-                try {
-                    vkDocsArray.parse(response.json);
-                    callback.onSuccess(vkDocsArray);
-                } catch (JSONException e) {
-                    callback.onError(new VKError(10));
-                }
+                callback.onSuccess(null);
             }
         });
     }
@@ -330,13 +290,11 @@ public class VKRequests {
 
         @Override
         public void onError(VKError error) {
-            Log.d("ANNA", "Error " + error);
             callback.onError(error);
         }
 
         @Override
         public void attemptFailed(VKRequest request, int attemptNumber, int totalAttempts) {
-            Log.d("ANNA", "Attempt failed");
         }
     }
 }

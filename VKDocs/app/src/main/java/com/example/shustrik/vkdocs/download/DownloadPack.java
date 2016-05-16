@@ -5,6 +5,9 @@ import android.content.ServiceConnection;
 import java.io.File;
 
 
+/**
+ * Stores information about each download process
+ */
 class DownloadPack {
     private ServiceConnection connection;
     private DownloadService service;

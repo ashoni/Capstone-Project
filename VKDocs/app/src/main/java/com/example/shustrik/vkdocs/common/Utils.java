@@ -5,6 +5,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+
+/**
+ * Utils for files and presentation
+ */
 public class Utils {
     private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("d MMM yyyy");
 
@@ -22,7 +26,7 @@ public class Utils {
     }
 
     public static String convertDate(int date) {
-        Date d =  new java.util.Date((long)date*1000);
+        Date d = new java.util.Date((long) date * 1000);
         return simpleDateFormat.format(d);
     }
 
@@ -31,8 +35,8 @@ public class Utils {
         if (arr.length == 0)
             return "text/plain";
         String mimeType = android.webkit.MimeTypeMap.getSingleton()
-                .getMimeTypeFromExtension(arr[arr.length - 1]);
-        return mimeType == null ? "text/plain" : null;
+                .getMimeTypeFromExtension(arr[arr.length - 1].toLowerCase());
+        return mimeType == null ? "text/plain" : mimeType;
     }
 
     public static String join(List<Integer> ids) {
@@ -41,7 +45,7 @@ public class Utils {
         }
         StringBuilder sb = new StringBuilder();
         sb.append(ids.get(0));
-        for (int i = 1; i < ids.size(); i ++) {
+        for (int i = 1; i < ids.size(); i++) {
             sb.append(",");
             sb.append(ids.get(i));
         }

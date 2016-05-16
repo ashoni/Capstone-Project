@@ -7,14 +7,14 @@
         android:title="@android:string/search_go"
         app:showAsAction="always|collapseActionView"
         app:actionViewClass="android.widget.SearchView" />
-    <item
-        android:id="@+id/sort"
-        android:orderInCategory="100"
-        android:title="Sort"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/view_type"
-        android:orderInCategory="100"
-        android:title="GridView"
-        app:showAsAction="never" />
+    <!--<item-->
+        <!--android:id="@+id/sort"-->
+        <!--android:orderInCategory="100"-->
+        <!--android:title="Sort"-->
+        <!--app:showAsAction="never" />-->
+    <!--<item-->
+        <!--android:id="@+id/view_type"-->
+        <!--android:orderInCategory="100"-->
+        <!--android:title="GridView"-->
+        <!--app:showAsAction="never" />-->
 </menu>

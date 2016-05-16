@@ -1,16 +1,16 @@
 package com.example.shustrik.vkdocs.menus;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ShareCompat;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,14 +18,18 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.PopupWindow;
 
+import com.example.shustrik.vkdocs.MainActivity;
 import com.example.shustrik.vkdocs.R;
 import com.example.shustrik.vkdocs.adapters.DocListAdapter;
 import com.example.shustrik.vkdocs.common.DocUtils;
 import com.example.shustrik.vkdocs.download.DefaultDownloader;
 import com.example.shustrik.vkdocs.download.DocDownloader;
 
+/**
+ * Responsible for the document menu
+ */
 class DocItemMenuListener {
-    private Activity activity;
+    private MainActivity activity;
     private RecyclerView recyclerView;
     private int docId;
     private int ownerId;
@@ -35,7 +39,7 @@ class DocItemMenuListener {
     private DocDownloader docDownloader;
     private DocMenu docMenu;
 
-    public DocItemMenuListener(Activity activity, RecyclerView recyclerView,
+    public DocItemMenuListener(MainActivity activity, RecyclerView recyclerView,
                                DocDownloader docDownloader, DocMenu docMenu) {
         this.activity = activity;
         this.recyclerView = recyclerView;
@@ -47,7 +51,6 @@ class DocItemMenuListener {
         switch (menuId) {
             case R.id.doc_offline:
                 if (state) {
-                    Log.w("ANNA", "Noww "  + state);
                     docDownloader.processToOffline(url, title, docId);
                 } else {
                     docDownloader.onCancelPressed(docId);
@@ -66,13 +69,12 @@ class DocItemMenuListener {
                 DocUtils.delete(ownerId, docId, activity, new DocUtils.RequestCallback() {
                     @Override
                     public void onSuccess() {
-                        Log.w("ANNA", recyclerView.getChildCount() + ":" + position);
-                        ((DocListAdapter)recyclerView.getAdapter()).onRemoved(position);
+                        ((DocListAdapter) recyclerView.getAdapter()).onRemoved(position);
                     }
 
                     @Override
                     public void onFailure() {
-                        //send a message
+                        activity.snack(activity.getString(R.string.delete_failure, title), Snackbar.LENGTH_SHORT);
                     }
                 });
                 return true;
@@ -94,28 +96,26 @@ class DocItemMenuListener {
                 activity.startActivity(Intent.createChooser(ShareCompat.IntentBuilder.from(activity)
                         .setType("text/plain")
                         .setText(title + " : " + url)
-                        .getIntent(), "Share"));
+                        .getIntent(), activity.getString(R.string.share)));
                 return true;
-            case R.id.doc_share:
-                docMenu.hide();
-                return true;
+//            case R.id.doc_share:
+//                docMenu.hide();
+//                return true;
             default:
                 return false;
         }
     }
 
 
-    //hide fab
-    //узнать, что за чушь с тенью
-    //можно добавить затенение исходного элемента
-    //добавить snack и сюда, и в добавление (на успех, т.к. на экране мы результата не видим)
     private void displayPopupWindow(String title) {
         docMenu.delayAnimation();
         docMenu.hide();
         final PopupWindow popup = new PopupWindow();
         //http://stackoverflow.com/questions/27259614/android-popupwindow-elevation-does-not-show-shadow
         popup.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
-        popup.setElevation(24);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            popup.setElevation(24);
+        }
         popup.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
@@ -125,10 +125,8 @@ class DocItemMenuListener {
         LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View layout = inflater.inflate(R.layout.rename_window, null);
         popup.setContentView(layout);
-        // Set content width and height
         popup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
         popup.setWidth(WindowManager.LayoutParams.WRAP_CONTENT);
-        // Closes the popup window when touch outside of it - when looses focus
         popup.setOutsideTouchable(true);
         popup.setFocusable(true);
         popup.setTouchable(true);

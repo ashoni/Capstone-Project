@@ -11,6 +11,9 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Extended version of VK sdk dialog object
+ */
 public class MyVKApiDialog extends VKApiDialog implements MyVKEntity {
     private int peerId;
     private String dialogName;

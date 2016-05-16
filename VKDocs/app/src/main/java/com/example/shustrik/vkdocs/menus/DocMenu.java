@@ -1,9 +1,9 @@
 package com.example.shustrik.vkdocs.menus;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.support.v7.view.menu.MenuBuilder;
 import android.support.v7.widget.RecyclerView;
 import android.view.Gravity;
@@ -16,6 +16,7 @@ import android.view.animation.Animation;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 
+import com.example.shustrik.vkdocs.MainActivity;
 import com.example.shustrik.vkdocs.R;
 import com.example.shustrik.vkdocs.adapters.DocListAdapter;
 import com.example.shustrik.vkdocs.download.DocDownloader;
@@ -24,10 +25,13 @@ import com.example.shustrik.vkdocs.uicommon.AnimationManager;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Document menu popup
+ */
 public class DocMenu {
     private PopupWindow menuPopup;
     private MenuAdapter menuAdapter;
-    private Activity activity;
+    private MainActivity activity;
     private int docId;
     private RecyclerView recyclerView;
     private boolean newPopupCreated = false;
@@ -35,7 +39,7 @@ public class DocMenu {
     private DocItemMenuListener docItemMenuListener;
     private boolean isOffline;
 
-    public DocMenu(Activity activity,
+    public DocMenu(MainActivity activity,
                    RecyclerView recyclerView,
                    DocDownloader docDownloader,
                    int menuId) {
@@ -63,7 +67,9 @@ public class DocMenu {
         menuPopup.setContentView(menuView);
         menuPopup.setFocusable(true);
         menuPopup.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
-        menuPopup.setElevation(24);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            menuPopup.setElevation(24);
+        }
         menuPopup.setHeight(WindowManager.LayoutParams.WRAP_CONTENT);
         menuPopup.setWidth(WindowManager.LayoutParams.MATCH_PARENT);
         menuPopup.setOutsideTouchable(true);
@@ -101,7 +107,6 @@ public class DocMenu {
     }
 
     public void setOffline(boolean isOffline) {
-        //menuAdapter.setOffline(isOffline);
         this.isOffline = isOffline;
     }
 

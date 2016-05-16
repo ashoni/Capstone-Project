@@ -92,6 +92,10 @@ public class VKApiDocs extends VKApiBase {
         return new VKUploadDocRequest(doc);
     }
 
+    public VKRequest uploadDocRequest(File doc, String title) {
+        return new VKUploadDocRequest(doc, title);
+    }
+
     /**
      * Upload a document to VK servers
      * @param doc Doc object to upload

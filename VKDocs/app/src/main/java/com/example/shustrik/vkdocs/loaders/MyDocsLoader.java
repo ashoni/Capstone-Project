@@ -9,7 +9,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 
 import com.example.shustrik.vkdocs.adapters.DocListAdapter;
 import com.example.shustrik.vkdocs.common.DBConverter;
@@ -20,7 +19,9 @@ import com.example.shustrik.vkdocs.vk.MyVKApiDocument;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * Loads documents from users VK collection (which is synchronized and stored on the device)
+ */
 public class MyDocsLoader implements CustomLoader, LoaderManager.LoaderCallbacks<Cursor> {
     private final int DOC_LOADER = 13;
     private final int SEARCH_LOADER = 11;
@@ -54,7 +55,6 @@ public class MyDocsLoader implements CustomLoader, LoaderManager.LoaderCallbacks
 
     @Override
     public void search(String query) {
-        Log.w("ANNA", "Search loader");
         this.query = query;
         adapter.setLoading(true);
         loaderManager.restartLoader(SEARCH_LOADER, null, this);
@@ -74,13 +74,10 @@ public class MyDocsLoader implements CustomLoader, LoaderManager.LoaderCallbacks
 
     @Override
     public void initLoader() {
-        Log.w("ANNA", "Init loader");
         if (!isRefreshing) {
-            Log.w("ANNA", "Set loading");
             adapter.setLoading(true);
         }
         loaderManager.restartLoader(DOC_LOADER, null, this);
-        //loaderManager.initLoader(DOC_LOADER, null, this);
     }
 
     @Override
@@ -91,7 +88,6 @@ public class MyDocsLoader implements CustomLoader, LoaderManager.LoaderCallbacks
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         Uri docConstUri = DocsContract.DocumentEntry.buildDocConstUri();
-        Log.w("ANNA", "on create loader");
         if (i == DOC_LOADER) {
             return new CursorLoader(context,
                     docConstUri,
@@ -103,7 +99,6 @@ public class MyDocsLoader implements CustomLoader, LoaderManager.LoaderCallbacks
             String where = (query == null || query.isEmpty()) ? null :
                     DocsContract.DocumentEntry.COLUMN_TITLE + " LIKE '%" + query + "%'";
 
-            Log.w("ANNA", "Where: " + where);
             return new CursorLoader(context,
                     docConstUri,
                     DBConverter.DOC_CONST_COLUMNS,
@@ -122,7 +117,6 @@ public class MyDocsLoader implements CustomLoader, LoaderManager.LoaderCallbacks
         while (cursor.moveToNext()) {
             documents.add(new MyVKApiDocument(cursor));
         }
-        Log.w("ANNA", "finish: " + documents.size());
         adapter.swapData(documents);
     }
 
@@ -136,7 +130,6 @@ public class MyDocsLoader implements CustomLoader, LoaderManager.LoaderCallbacks
             swipe.setRefreshing(false);
             isRefreshing = false;
         } else {
-            Log.w("ANNA", "Stop loading");
             adapter.setLoading(false);
         }
     }

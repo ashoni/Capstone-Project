@@ -5,11 +5,11 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.example.shustrik.vkdocs.data.DocsContract.DocumentEntry;
-import com.example.shustrik.vkdocs.data.DocsContract.UserEntry;
-import com.example.shustrik.vkdocs.data.DocsContract.FileEntry;
 import com.example.shustrik.vkdocs.data.DocsContract.CommunityEntry;
 import com.example.shustrik.vkdocs.data.DocsContract.DialogEntry;
+import com.example.shustrik.vkdocs.data.DocsContract.DocumentEntry;
+import com.example.shustrik.vkdocs.data.DocsContract.FileEntry;
+import com.example.shustrik.vkdocs.data.DocsContract.UserEntry;
 
 public class DocsDBHelper extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 2;
@@ -22,8 +22,6 @@ public class DocsDBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Create a table to hold locations.  A location consists of the string supplied in the
-        // location setting, the city name, and the latitude and longitude
         final String SQL_CREATE_DOCUMENT_TABLE = "CREATE TABLE " + DocumentEntry.TABLE_NAME + " (" +
                 DocumentEntry._ID + " INTEGER PRIMARY KEY, " +
                 DocumentEntry.COLUMN_ACCESS_KEY + " TEXT, " +

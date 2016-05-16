@@ -4,11 +4,11 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
-
-import java.io.File;
 
 
+/**
+ * Runs FilesRemoveService
+ */
 public class FilesRemoveTimer {
     private AlarmManager am;
     private Context context;
@@ -29,7 +29,6 @@ public class FilesRemoveTimer {
         if (fileRemoveIntent == null) {
             createIntent();
         }
-        Log.w("ANNA", "Starting timer");
         am.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, FIRST_SLEEP * 1000,
                 PERIOD * 1000, fileRemoveIntent);
     }

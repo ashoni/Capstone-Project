@@ -1,6 +1,5 @@
 package com.example.shustrik.vkdocs.loaders;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,8 +7,8 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 
+import com.example.shustrik.vkdocs.MainActivity;
 import com.example.shustrik.vkdocs.adapters.LoadMore;
 import com.example.shustrik.vkdocs.adapters.VKEntityListAdapter;
 import com.example.shustrik.vkdocs.common.DBConverter;
@@ -36,10 +35,10 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-//ДОБАВИТЬ LOADMORE
-// extends BroadcastReceiver
+/**
+ * Loads dialog list (after dialog list is loaded, loads information about its participants)
+ */
 public class DialogsLoader implements CustomLoader, LoadMore, LoaderManager.LoaderCallbacks<Cursor> {
-    public static final String TAG = "ANNA_DL";
     public static final int START_COUNT = 40;
     private final int DIALOG_LOADER = 19;
 
@@ -51,7 +50,7 @@ public class DialogsLoader implements CustomLoader, LoadMore, LoaderManager.Load
     private int count = 20;
     private boolean isRefreshing = false;
     private long ownerId;
-    private Context context;
+    private MainActivity activity;
     private LoaderManager loaderManager;
 
     private String query;
@@ -63,13 +62,13 @@ public class DialogsLoader implements CustomLoader, LoadMore, LoaderManager.Load
         return instance;
     }
 
-    public static DialogsLoader initAndGetInstance(Context context, VKEntityListAdapter adapter, SwipeRefreshLayout swipe,
+    public static DialogsLoader initAndGetInstance(MainActivity activity, VKEntityListAdapter adapter, SwipeRefreshLayout swipe,
                                                    LoaderManager loaderManager, long ownerId) {
-        instance = new DialogsLoader(context, adapter, swipe, loaderManager, ownerId);
+        instance = new DialogsLoader(activity, adapter, swipe, loaderManager, ownerId);
         return instance;
     }
 
-    private DialogsLoader(Context context, VKEntityListAdapter adapter, SwipeRefreshLayout swipe,
+    private DialogsLoader(MainActivity activity, VKEntityListAdapter adapter, SwipeRefreshLayout swipe,
                           LoaderManager loaderManager, long ownerId) {
         this.adapter = adapter;
         adapter.setLoadMore(this);
@@ -77,16 +76,14 @@ public class DialogsLoader implements CustomLoader, LoadMore, LoaderManager.Load
         swipe.setOnRefreshListener(this);
         this.loaderManager = loaderManager;
         this.ownerId = ownerId;
-        this.context = context;
-        Log.w("ANNA", "Dialogs loader new " + dialogs.size());
+        this.activity = activity;
     }
 
     @Override
     public void onRefresh() {
-        Log.w("ANNA", "Refresh " + dialogs.size());
         isRefreshing = true;
         swipe.setRefreshing(true);
-        VKDocsSyncAdapter.syncImmediately(context);
+        VKDocsSyncAdapter.syncImmediately(activity);
     }
 
     private void onRefreshFailed() {
@@ -97,9 +94,8 @@ public class DialogsLoader implements CustomLoader, LoadMore, LoaderManager.Load
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Uri dialogsUri = DocsContract.DialogEntry.buildDialogsUri(ownerId);
-        Log.w("ANNA", "on create loader " + dialogs.size());
         if (id == DIALOG_LOADER) {
-            return new CursorLoader(context,
+            return new CursorLoader(activity,
                     dialogsUri,
                     DBConverter.DIALOG_COLUMNS,
                     null,
@@ -123,21 +119,17 @@ public class DialogsLoader implements CustomLoader, LoadMore, LoaderManager.Load
                 dialogs.add(entity);
             }
         }
-        Log.w("ANNA", "finish: " + dialogs.size() + " " + this);
         offset = dialogs.size();
         adapter.swapData(dialogs);
-        Log.w("ANNA", "finish: " + dialogs.size() + " " + this);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        Log.w("ANNA", "Reset " + dialogs.size());
         adapter.swapData(null);
     }
 
     @Override
     public void initLoader() {
-        Log.w("ANNA", "Init " + dialogs.size());
         offset = 0;
         if (!isRefreshing) {
             adapter.setLoading(true);
@@ -154,7 +146,6 @@ public class DialogsLoader implements CustomLoader, LoadMore, LoaderManager.Load
 
     @Override
     public void load() {
-        Log.w("ANNA", "Load " + dialogs.size());
         loadDialogs(offset, count, new Callback() {
             @Override
             public void process(List<MyVKApiDialog> newDialogs, boolean isSuccess) {
@@ -185,12 +176,10 @@ public class DialogsLoader implements CustomLoader, LoadMore, LoaderManager.Load
     }
 
     public static void loadDialogs(int offset, int count, final Callback callback) {
-        Log.w("ANNA", "load dialogs static");
         VKRequests.getDialogs(new VKRequestCallback<MyVKDialogsArray>() {
             @Override
             public void onSuccess(MyVKDialogsArray receivedDialogs) {
                 if (receivedDialogs.size() > 0) {
-                    Log.w("ANNA", "Received informations on: " + receivedDialogs.size());
 
                     Set<Integer> userIds = new HashSet<>();
                     Set<Integer> groupIds = new HashSet<>();
@@ -210,16 +199,13 @@ public class DialogsLoader implements CustomLoader, LoadMore, LoaderManager.Load
                     loadUsersInfo(userIds, dialogsCount, userMap, groupMap, receivedDialogs, callback);
                     loadCommunitiesInfo(groupIds, dialogsCount, userMap, groupMap, receivedDialogs, callback);
                 } else {
-                    Log.w(TAG, "No more dialogs");
                     callback.process(new ArrayList<MyVKApiDialog>(), true);
                 }
             }
 
             @Override
             public void onError(VKError e) {
-                Log.w(TAG, "Upload problems");
                 callback.process(null, false);
-                //SNACK?
             }
         }, offset, count);
     }
@@ -291,14 +277,11 @@ public class DialogsLoader implements CustomLoader, LoadMore, LoaderManager.Load
                 completeDialogs.add(dialog);
             } else {
                 boolean got = false;
-                Log.w("ANNA", "loader; chat");
                 List<VKApiUser> chatUsers = new ArrayList<>();
                 for (int peerId : dialog.getPeerIds()) {
-                    Log.w("ANNA", "Must be chat user " + peerId);
                     if (userMap.containsKey(peerId)) {
                         got = true;
                         chatUsers.add(userMap.get(peerId));
-                        Log.w("ANNA", "Added chat user: " + userMap.get(peerId).first_name);
                     }
                 }
                 if (got) {
@@ -333,27 +316,13 @@ public class DialogsLoader implements CustomLoader, LoadMore, LoaderManager.Load
     @Override
     public void search(String query) {
         if (query == null || query.isEmpty()) {
-            Log.w("ANNA", "bad search");
             isSearch = false;
             this.query = "";
             initLoader();
         } else {
             isSearch = true;
             this.query = query;
-            Log.w("ANNA", "Search: " + query + "of (" + dialogs.size() + " " + this);
             initLoader();
-//            this.query = query;
-//            List<MyVKEntity> searchList = new ArrayList<>();
-//            for (MyVKEntity dialog : dialogs) {
-//                Log.w("ANNA", dialog.getPeerName() + " " + dialog.getPeerName().toLowerCase());
-//                Log.w("ANNA", query + " " + query.toLowerCase());
-//                Log.w("ANNA", "Contains: " + dialog.getPeerName().toLowerCase().contains(query.toLowerCase()));
-//                if (dialog.getPeerName().toLowerCase().contains(query.toLowerCase())) {
-//                    searchList.add(dialog);
-//                }
-//            }
-//            dialogs = searchList;
-//            adapter.swapData(dialogs);
         }
     }
 }

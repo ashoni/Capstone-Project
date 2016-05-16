@@ -4,11 +4,11 @@
         <item
             android:id="@+id/doc_share_link"
             android:icon="@drawable/ic_insert_link_black_24dp"
-            android:title="Share link" />
-        <item
-            android:id="@+id/doc_share"
-            android:icon="@drawable/ic_share_black_24dp"
-            android:title="Send file" />
+            android:title="@string/share_link" />
+        <!--<item-->
+            <!--android:id="@+id/doc_share"-->
+            <!--android:icon="@drawable/ic_share_black_24dp"-->
+            <!--android:title="Send file" />-->
     </group>
 
     <!-- Line -->
@@ -17,10 +17,10 @@
         <item
             android:id="@+id/doc_add"
             android:icon="@drawable/ic_add_black_24dp"
-            android:title="Add to My Docs" />
+            android:title="@string/add_to_my_docs" />
         <item
             android:id="@+id/doc_download"
             android:icon="@drawable/ic_file_download_black_24dp"
-            android:title="Download" />
+            android:title="@string/download" />
     </group>
 </menu>

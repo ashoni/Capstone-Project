@@ -7,7 +7,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * Created by shustrik on 10.03.2016.
+ * List of MyVKApiDialog objects
  */
 public class MyVKDialogsArray extends VKList<MyVKApiDialog> {
     @Override

@@ -1,17 +1,17 @@
 package com.example.shustrik.vkdocs.download;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
-import android.util.Log;
 
 import com.example.shustrik.vkdocs.MainActivity;
+import com.example.shustrik.vkdocs.R;
 import com.example.shustrik.vkdocs.common.DocUtils;
 import com.example.shustrik.vkdocs.common.Utils;
 
@@ -19,15 +19,15 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-
+/**
+ * Implements DocDownloader
+ */
 class DocDownloaderImpl implements DownloadCallback, DocDownloader {
     private Map<Integer, DownloadPack> downloadPackMap = new HashMap<>();
     private int openingDocId = -1;
 
-    private Activity activity;
+    private MainActivity activity;
     private DownloadListener openListener;
-
-    public static String TAG = "ANNA_D";
 
 
     public DocDownloaderImpl() {
@@ -36,16 +36,13 @@ class DocDownloaderImpl implements DownloadCallback, DocDownloader {
 
     /**
      * no need to keep loading file for open file if user moved to another fragment
-     *
      */
     @Override
     public void setOpenListener(DownloadListener openListener) {
         int curListenerId = this.openListener == null ? -1 : this.openListener.getListenerId();
         int newListenerId = openListener.getListenerId();
 
-        if (openingDocId != -1 && curListenerId != newListenerId)
-        {
-            Log.w("ANNA", "Fragment changed, release opening");
+        if (openingDocId != -1 && curListenerId != newListenerId) {
             if (this.openListener != null) {
                 this.openListener.releaseOpening(openingDocId);
             }
@@ -66,7 +63,7 @@ class DocDownloaderImpl implements DownloadCallback, DocDownloader {
         this.openingDocId = openingDocId;
     }
 
-    public void onAttach(Activity activity) {
+    public void onAttach(MainActivity activity) {
         this.activity = activity;
         //reattach all
     }
@@ -82,8 +79,6 @@ class DocDownloaderImpl implements DownloadCallback, DocDownloader {
 
     @Override
     public void onCancelPressed(int docId) {
-        Log.w(TAG, "cancel " + docId);
-
         DownloadPack pack = downloadPackMap.get(docId);
         if (pack != null) {
             pack.cancelLoading();
@@ -100,20 +95,37 @@ class DocDownloaderImpl implements DownloadCallback, DocDownloader {
     }
 
     @Override
-    public void onDownloadSuccess(int docId) {
+    public void onDownloadSuccess(final int docId) {
+        final File f = downloadPackMap.get(docId).getFile();
         if (docId == openingDocId) {
-            openFile(downloadPackMap.get(docId).getFile());
+            MediaScannerConnection.scanFile(activity,
+                    new String[]{f.toString()}, null,
+                    new MediaScannerConnection.OnScanCompletedListener() {
+                        public void onScanCompleted(String path, Uri uri) {
+                            openFile(f);
+                        }
+                    });
         }
         if (downloadPackMap.get(docId).getGoal() == DownloadPack.GOAL.SAVE_TO_OFFLINE) {
-            DocUtils.setOfflineAvailable(activity, docId,
-                    downloadPackMap.get(docId).getFile());
+            MediaScannerConnection.scanFile(activity,
+                    new String[]{f.toString()}, null,
+                    new MediaScannerConnection.OnScanCompletedListener() {
+                        public void onScanCompleted(String path, Uri uri) {
+                            DocUtils.setOfflineAvailable(activity, docId, f);
+                        }
+                    });
         }
         releaseDownload(docId, downloadPackMap.get(docId));
     }
 
     @Override
     public void onDownloadFail(int docId) {
-        //notify somebody
+        activity.snack(activity.getString(R.string.download_failed), Snackbar.LENGTH_SHORT);
+        releaseDownload(docId, downloadPackMap.get(docId));
+    }
+
+    @Override
+    public void onDownloadCancel(int docId) {
         releaseDownload(docId, downloadPackMap.get(docId));
     }
 
@@ -137,15 +149,17 @@ class DocDownloaderImpl implements DownloadCallback, DocDownloader {
 
     private void releaseDownload(int docId, DownloadPack dp) {
         if (dp != null && dp.isAttached()) {
-            activity.unbindService(dp.getConnection());
+            try {
+                activity.unbindService(dp.getConnection());
+            } catch (Exception e) {
+                //after rotation service won't be binded
+            }
         }
         if (openingDocId == docId) {
             openListener.releaseOpening(docId);
             openingDocId = -1;
         }
-        if (dp != null && dp.getGoal() == DownloadPack.GOAL.SAVE_TO_OFFLINE) {
-            DocNotificationManager.dismissNotification(activity, docId);
-        }
+        DocNotificationManager.dismissNotification(activity, docId);
         downloadPackMap.remove(docId);
     }
 
@@ -170,9 +184,7 @@ class DocDownloaderImpl implements DownloadCallback, DocDownloader {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-        Log.w(TAG, "ready to open " + file.getAbsolutePath());
         String mimetype = Utils.getFileMimeType(file);
-        Log.w(TAG, "mimetype " + mimetype);
 
         intent.setDataAndType(Uri.fromFile(file), mimetype);
         activity.startActivity(intent);
@@ -187,7 +199,7 @@ class DocDownloaderImpl implements DownloadCallback, DocDownloader {
             }
             return true;
         } else {
-            ((MainActivity) activity).snack("Another file is opening", Snackbar.LENGTH_SHORT);
+            activity.snack(activity.getString(R.string.open_concurrent), Snackbar.LENGTH_SHORT);
             return false;
         }
     }
@@ -196,7 +208,7 @@ class DocDownloaderImpl implements DownloadCallback, DocDownloader {
         if (!downloadPackMap.containsKey(docId)) {
             initDownload(docId, new DownloadPack(DownloadPack.GOAL.SAVE_TO_OFFLINE));
             startAndBindDownloadService(docId, createDownloadIntent(url, title, docId));
-            DocNotificationManager.createNotification(activity, title, docId);
+            DocNotificationManager.createDownloadingNotification(activity, title, docId);
         }
     }
 }

@@ -2,22 +2,31 @@ package com.example.shustrik.vkdocs.common;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.util.Log;
+import android.support.design.widget.Snackbar;
 
+import com.example.shustrik.vkdocs.MainActivity;
+import com.example.shustrik.vkdocs.R;
 import com.example.shustrik.vkdocs.data.DocsContract;
+import com.example.shustrik.vkdocs.sync.VKDocsSyncAdapter;
+import com.example.shustrik.vkdocs.sync.VKDocsSyncService;
 import com.example.shustrik.vkdocs.vk.MyVKApiDocument;
 import com.example.shustrik.vkdocs.vk.VKRequestCallback;
 import com.example.shustrik.vkdocs.vk.VKRequests;
 import com.vk.sdk.api.VKError;
 
 import java.io.File;
-import java.util.Vector;
 
+
+//ToDo: add export document functionality
+
+/**
+ * Wrapper for VK operations
+ */
 public class DocUtils {
     public static void delete(int ownerId, final int docId,
                               final Context context,
                               final RequestCallback callback
-                              ) {
+    ) {
         VKRequests.delete(new VKRequestCallback<Void>() {
             @Override
             public void onSuccess(Void obj) {
@@ -37,8 +46,7 @@ public class DocUtils {
 
     public static void rename(int ownerId, final int docId, final String title,
                               final Context context,
-                              final RequestCallback callback)
-    {
+                              final RequestCallback callback) {
         VKRequests.edit(new VKRequestCallback<Void>() {
             @Override
             public void onSuccess(Void obj) {
@@ -57,27 +65,22 @@ public class DocUtils {
     }
 
 
-    public static void add(final MyVKApiDocument document, final Context context) {
+    public static void add(final MyVKApiDocument document, final MainActivity activity) {
         VKRequests.addToUserDocs(new VKRequestCallback<Void>() {
             @Override
             public void onSuccess(Void obj) {
-                context.getContentResolver().insert(DocsContract.DocumentEntry.CONTENT_URI,
+                activity.getContentResolver().insert(DocsContract.DocumentEntry.CONTENT_URI,
                         DBConverter.parseIntoValues(document));
+                VKDocsSyncAdapter.syncImmediately(activity);
+                activity.snack(activity.getString(R.string.add_success, document.title),
+                        Snackbar.LENGTH_SHORT);
             }
 
             @Override
             public void onError(VKError e) {
-                //send notification snack
+                activity.snack(activity.getString(R.string.add_new_error), Snackbar.LENGTH_LONG);
             }
         }, document.owner_id, document.id, document.access_key);
-    }
-
-    public static void exportToGoogleDrive() {
-
-    }
-
-    public static void exportToDropBox() {
-
     }
 
     public static void setTempAvailable(Context context, int docId, File f) {
@@ -107,6 +110,7 @@ public class DocUtils {
 
     public interface RequestCallback {
         void onSuccess();
+
         void onFailure();
     }
 }

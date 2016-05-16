@@ -2,7 +2,6 @@ package com.example.shustrik.vkdocs.loaders;
 
 
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 
 import com.example.shustrik.vkdocs.adapters.DocListAdapter;
 import com.example.shustrik.vkdocs.adapters.LoadMore;
@@ -15,9 +14,11 @@ import com.vk.sdk.api.VKError;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DialogDocsLoader implements CustomLoader, LoadMore {
-    public static String TAG = "ANNA_DDL";
 
+/**
+ * Loads documents which were attached to the dialog
+ */
+public class DialogDocsLoader implements CustomLoader, LoadMore {
     private String startFrom = "";
     private int count = 30;
     private int peerId;
@@ -67,15 +68,12 @@ public class DialogDocsLoader implements CustomLoader, LoadMore {
     }
 
     private void loadDialogDocs() {
-        Log.w("ANNA!", "Loading from " + startFrom);
         VKRequests.getAttachments(new VKRequestCallback<MyVKDocsAttachments>() {
             @Override
             public void onSuccess(MyVKDocsAttachments documents) {
                 updateAdapterState();
-                Log.w("ANNA!", documents.getDocuments().toString());
                 List<MyVKApiDocument> goodDocs = new ArrayList<>();
                 if (isSearch && query != null) {
-                    Log.w("ANNA", "Difficult! " + query);
                     for (MyVKApiDocument doc : documents.getDocuments()) {
                         if (doc.title.toLowerCase().contains(query.toLowerCase())) {
                             goodDocs.add(doc);
@@ -100,7 +98,6 @@ public class DialogDocsLoader implements CustomLoader, LoadMore {
             @Override
             public void onError(VKError e) {
                 updateAdapterState();
-                Log.w(TAG, e.errorMessage);
                 adapter.notifyLoadingComplete();
             }
         }, peerId, startFrom, count);
@@ -125,7 +122,6 @@ public class DialogDocsLoader implements CustomLoader, LoadMore {
         } else {
             isSearch = true;
             this.query = query;
-            Log.w("ANNA", "ddsearch");
             initLoader();
         }
     }

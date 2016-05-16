@@ -5,8 +5,6 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.text.format.Time;
-import android.util.Log;
 
 public class DocsContract {
     public static final String CONTENT_AUTHORITY = "com.example.shustrik.vkdocs";
@@ -28,7 +26,6 @@ public class DocsContract {
         public static final String CONTENT_ITEM_TYPE =
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_DOCS;
 
-        // Table name
         public static final String TABLE_NAME = "docs";
 
         public static final String COLUMN_OWNER_ID = "owner_id";
@@ -38,7 +35,6 @@ public class DocsContract {
         public static final String COLUMN_URL = "url";
         public static final String COLUMN_PREVIEW_URL = "preview_url";
         public static final String COLUMN_DATE = "date";
-        //Check if necessary. Suppose it should be when I add smbs document.
         public static final String COLUMN_ACCESS_KEY = "access_key";
 
 
@@ -146,7 +142,6 @@ public class DocsContract {
         public static final String CONTENT_ITEM_TYPE =
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_GROUPS;
 
-        // Table name
         public static final String TABLE_NAME = "groups";
 
         public static final String COLUMN_TITLE = "title";

@@ -1,27 +1,22 @@
 package com.example.shustrik.vkdocs.loaders;
 
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 
 import com.example.shustrik.vkdocs.adapters.DocListAdapter;
 import com.example.shustrik.vkdocs.adapters.LoadMore;
 import com.example.shustrik.vkdocs.vk.MyVKApiDocument;
 import com.example.shustrik.vkdocs.vk.MyVKDocsArray;
-import com.example.shustrik.vkdocs.vk.MyVKDocsAttachments;
 import com.example.shustrik.vkdocs.vk.VKRequestCallback;
 import com.example.shustrik.vkdocs.vk.VKRequests;
 import com.vk.sdk.api.VKError;
-import com.vk.sdk.api.model.VKApiDocument;
-import com.vk.sdk.api.model.VKDocsArray;
 
 import java.util.ArrayList;
-import java.util.List;
 
+/**
+ * Implements global search in VK library
+ */
 public class GlobalLoader implements CustomLoader, LoadMore {
-    public static String TAG = "ANNA_GL";
-
     private int count = 30;
-    private int peerId;
     private boolean isRefreshing = false;
     private SwipeRefreshLayout swipe;
     private int offset = 0;
@@ -29,12 +24,10 @@ public class GlobalLoader implements CustomLoader, LoadMore {
     private DocListAdapter adapter;
 
     private String query;
-    private boolean isSearch = false;
 
-    public GlobalLoader(DocListAdapter adapter, int peerId, SwipeRefreshLayout swipe) {
+    public GlobalLoader(DocListAdapter adapter, SwipeRefreshLayout swipe) {
         this.adapter = adapter;
         adapter.setLoadMore(this);
-        this.peerId = peerId;
         this.swipe = swipe;
         swipe.setOnRefreshListener(this);
     }
@@ -49,7 +42,6 @@ public class GlobalLoader implements CustomLoader, LoadMore {
 
     @Override
     public void initLoader() {
-        Log.w("ANNA", "Hi, global");
         if (query == null || query.isEmpty()) {
             adapter.swapData(new ArrayList<MyVKApiDocument>());
             updateAdapterState();
@@ -72,7 +64,6 @@ public class GlobalLoader implements CustomLoader, LoadMore {
     }
 
     private void loadDocs() {
-        Log.w("ANNA!", "Loading from " + offset);
         VKRequests.globalSearch(new VKRequestCallback<MyVKDocsArray>() {
             @Override
             public void onSuccess(MyVKDocsArray documents) {

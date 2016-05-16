@@ -7,6 +7,7 @@
     android:background="@color/white"
     android:padding="@dimen/doc_list_item_padding">
     <ImageView
+        android:contentDescription="@string/dialog_icon"
         android:id="@+id/dialog_preview"
         android:adjustViewBounds="true"
         android:layout_height="@dimen/preview_size"
@@ -23,5 +24,5 @@
         android:layout_margin="@dimen/doc_list_item_padding"
         style="@style/CaptionText"
         android:layout_gravity="center_vertical"
-        android:text="No name"/>
+        android:text="@string/no_name"/>
 </LinearLayout>

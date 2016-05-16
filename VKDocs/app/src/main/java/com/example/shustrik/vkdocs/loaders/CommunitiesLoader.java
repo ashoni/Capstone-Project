@@ -1,16 +1,17 @@
 package com.example.shustrik.vkdocs.loaders;
 
 
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 
+import com.example.shustrik.vkdocs.MainActivity;
+import com.example.shustrik.vkdocs.R;
 import com.example.shustrik.vkdocs.adapters.LoadMore;
 import com.example.shustrik.vkdocs.adapters.VKEntityListAdapter;
 import com.example.shustrik.vkdocs.common.DBConverter;
@@ -27,8 +28,10 @@ import com.vk.sdk.api.model.VKApiCommunityArray;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Load communities list
+ */
 public class CommunitiesLoader implements CustomLoader, LoadMore, LoaderManager.LoaderCallbacks<Cursor> {
-    public static final String TAG = "ANNA_CL";
     public static final int START_COUNT = 40;
     private static CommunitiesLoader instance;
     private final int GROUP_LOADER = 17;
@@ -38,13 +41,13 @@ public class CommunitiesLoader implements CustomLoader, LoadMore, LoaderManager.
     private int count = 20;
     private boolean isRefreshing = false;
     private long ownerId;
-    private Context context;
+    private MainActivity activity;
     private SwipeRefreshLayout swipe;
     private LoaderManager loaderManager;
     private String query;
     private boolean isSearch = false;
 
-    private CommunitiesLoader(Context context, VKEntityListAdapter adapter, SwipeRefreshLayout swipe,
+    private CommunitiesLoader(MainActivity activity, VKEntityListAdapter adapter, SwipeRefreshLayout swipe,
                               LoaderManager loaderManager, long ownerId) {
         this.adapter = adapter;
         adapter.setLoadMore(this);
@@ -52,18 +55,19 @@ public class CommunitiesLoader implements CustomLoader, LoadMore, LoaderManager.
         swipe.setOnRefreshListener(this);
         this.loaderManager = loaderManager;
         this.ownerId = ownerId;
-        this.context = context;
+        this.activity = activity;
     }
 
     public static CommunitiesLoader getInstance() {
-        Log.w("ANNA", "Communities: get loader instance");
         return instance;
     }
 
-    public static CommunitiesLoader initAndGetInstance(Context context, VKEntityListAdapter adapter, SwipeRefreshLayout swipe,
-                                                       LoaderManager loaderManager, long ownerId) {
-        Log.w("ANNA", "Communities: create loader instance " + ownerId);
-        instance = new CommunitiesLoader(context, adapter, swipe, loaderManager, ownerId);
+    public static CommunitiesLoader initAndGetInstance(MainActivity activity,
+                                                       VKEntityListAdapter adapter,
+                                                       SwipeRefreshLayout swipe,
+                                                       LoaderManager loaderManager,
+                                                       long ownerId) {
+        instance = new CommunitiesLoader(activity, adapter, swipe, loaderManager, ownerId);
         return instance;
     }
 
@@ -77,7 +81,6 @@ public class CommunitiesLoader implements CustomLoader, LoadMore, LoaderManager.
         } else {
             isSearch = true;
             this.query = query;
-            Log.w("ANNA", "0 = " + communities.size());
             List<MyVKEntity> searchList = new ArrayList<>();
             for (MyVKEntity community : communities) {
                 if (community.getPeerName().toLowerCase().contains(query.toLowerCase())) {
@@ -99,14 +102,12 @@ public class CommunitiesLoader implements CustomLoader, LoadMore, LoaderManager.
     @Override
     public void onRefresh() {
         isSearch = false;
-        Log.w("ANNA", "Communities: refresh");
         isRefreshing = true;
         swipe.setRefreshing(true);
-        VKDocsSyncAdapter.syncImmediately(context);
+        VKDocsSyncAdapter.syncImmediately(activity);
     }
 
     private void onRefreshFailed() {
-        Log.w("ANNA", "Communities: refresh failed");
         updateAdapterState();
         adapter.onRefreshFailed();
     }
@@ -114,10 +115,8 @@ public class CommunitiesLoader implements CustomLoader, LoadMore, LoaderManager.
     @Override
     public void initLoader() {
         isSearch = false;
-        Log.w("ANNA", "community loader : init");
         offset = 0;
         if (!isRefreshing) {
-            Log.w("ANNA", "community loader : init without refresh, set adapter loading");
             adapter.setLoading(true);
         }
         loaderManager.restartLoader(GROUP_LOADER, null, this);
@@ -125,17 +124,14 @@ public class CommunitiesLoader implements CustomLoader, LoadMore, LoaderManager.
 
     @Override
     public void load() {
-        Log.w("ANNA", "load more: " + offset + " , " + count);
         loadCommunities();
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Uri communitiesUri = DocsContract.CommunityEntry.buildCommunityUri(ownerId);
-        Log.w("ANNA", communitiesUri.toString());
         if (id == GROUP_LOADER) {
-            Log.w("ANNA", "Community loader: create");
-            return new CursorLoader(context,
+            return new CursorLoader(activity,
                     communitiesUri,
                     DBConverter.GROUP_COLUMNS,
                     null,
@@ -151,7 +147,6 @@ public class CommunitiesLoader implements CustomLoader, LoadMore, LoaderManager.
         while (cursor.moveToNext()) {
             communities.add(new MyVKEntityImpl(cursor, MyVKEntityImpl.SrcType.GROUP));
         }
-        Log.w("ANNA", "Community load: finished " + communities.size());
         offset = communities.size();
         adapter.swapData(communities);
     }
@@ -162,12 +157,10 @@ public class CommunitiesLoader implements CustomLoader, LoadMore, LoaderManager.
     }
 
     private void loadCommunities() {
-        Log.w("ANNA", "load communities: " + offset + " , " + count);
         VKRequests.getCommunities(new VKRequestCallback<VKApiCommunityArray>() {
             @Override
             public void onSuccess(VKApiCommunityArray communityArray) {
                 updateAdapterState();
-                Log.w("ANNA", "Communities load finished, " + communityArray.size());
                 adapter.notifyLoadingComplete();
                 List<MyVKEntity> newCommunities = new ArrayList<>();
                 for (VKApiCommunity community : communityArray) {
@@ -184,7 +177,6 @@ public class CommunitiesLoader implements CustomLoader, LoadMore, LoaderManager.
                             }
                         }
                     }
-                    Log.w("ANNA", "Communities: " + communities.size());
                     offset += newCommunities.size();
                     adapter.swapData(communities);
                 }
@@ -195,8 +187,9 @@ public class CommunitiesLoader implements CustomLoader, LoadMore, LoaderManager.
 
             @Override
             public void onError(VKError e) {
-                //message that can't retrieve information
+                activity.snack(activity.getString(R.string.server_error), Snackbar.LENGTH_SHORT);
                 updateAdapterState();
+                adapter.swapData(new ArrayList<MyVKEntity>());
                 adapter.notifyLoadingComplete();
             }
         }, offset, count);
@@ -204,18 +197,15 @@ public class CommunitiesLoader implements CustomLoader, LoadMore, LoaderManager.
 
     private void updateAdapterState() {
         if (isRefreshing) {
-            Log.w("ANNA", "Community after refresh update");
             swipe.setRefreshing(false);
             isRefreshing = false;
         } else if (offset == 0) {
-            Log.w("ANNA", "Community after loading update");
             adapter.setLoading(false);
         }
     }
 
     public void onSyncUpdate(boolean isSuccess) {
         if (isSuccess) {
-            Log.w("ANNA", "Community Sync update " + isSuccess);
             loaderManager.restartLoader(GROUP_LOADER, null, this);
         } else {
             if (isRefreshing) {

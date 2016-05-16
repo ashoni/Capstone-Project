@@ -1,13 +1,11 @@
 package com.example.shustrik.vkdocs.fragments;
 
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,29 +23,15 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 /**
- * A placeholder fragment containing a simple view.
- * <p>
- * В Wearable можно подсмотреть анимацию
- * <p>
- * Сделать колесо загрузки
- * <p>
- * Дорогой блог, напиши про findviewbyid в navigationheader
- * <p>
- * Отработать ситуацию, когда во время загрузки документа щёлкают по ещё одному -- Map? how to open?
- * Является ли DownloadService синхронизированным?
- * Что-то не так с выбором типа - pl пытался открыться через pdf-reader
- * <p>
- * Если закрыть до завершения загрузки, то
- * java.lang.IllegalStateException: Fragment MainActivityFragment{c1e467a} not attached to Activity
- * at android.support.v4.app.Fragment.startActivity(Fragment.java:914)
- * at com.example.shustrik.vkdocs.MainActivityFragment.openFile(MainActivityFragment.java:150)
- * <p>
- * Добавить Loading your files
- * https://www.google.com/design/spec/components/progress-activity.html#progress-activity-behavior
- * <p>
  * Стрелка назад не работает, починить
  */
 public class MainActivityFragment extends Fragment {
+    private static final String EMPTY_TEXT = "empty_text";
+    private static final String LOADING_TEXT = "loading_text";
+    private static final String HOME_UP = "home_up";
+    private static final String FRAGMENT_TYPE = "fragment_type";
+    private static final String TITLE = "title";
+
     @Bind(R.id.recyclerview)
     RecyclerView recyclerView;
     @Bind(R.id.recyclerview_docs_empty)
@@ -61,6 +45,7 @@ public class MainActivityFragment extends Fragment {
     private String emptyText;
     private String loadText;
     private int type;
+    private String title;
 
     public MainActivityFragment() {
         type = -1;
@@ -69,12 +54,14 @@ public class MainActivityFragment extends Fragment {
     public static MainActivityFragment getInstance(int t,
                                                    boolean isHomeAsUpEnabled,
                                                    String emptyText,
-                                                   String loadText) {
+                                                   String loadText,
+                                                   String title) {
         MainActivityFragment fragment = new MainActivityFragment();
         fragment.type = t;
         fragment.isHomeAsUpEnabled = isHomeAsUpEnabled;
         fragment.emptyText = emptyText;
         fragment.loadText = loadText;
+        fragment.title = title;
         return fragment;
     }
 
@@ -87,27 +74,32 @@ public class MainActivityFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         ButterKnife.bind(this, rootView);
 
-        Log.w("ANNA", "Main fragment type = " + type);
         if (type == -1 && savedInstanceState != null) {
-            Log.w("ANNA", "Main fragment restore");
-            emptyText = savedInstanceState.getString("empty_text");
-            loadText = savedInstanceState.getString("loading_text");
-            isHomeAsUpEnabled = savedInstanceState.getBoolean("home_up");
-            type = savedInstanceState.getInt("fragment_type");
+            emptyText = savedInstanceState.getString(EMPTY_TEXT);
+            loadText = savedInstanceState.getString(LOADING_TEXT);
+            isHomeAsUpEnabled = savedInstanceState.getBoolean(HOME_UP);
+            type = savedInstanceState.getInt(FRAGMENT_TYPE);
+            title = savedInstanceState.getString(TITLE);
         }
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
 
+        ((MainActivity) getActivity()).setTitle(title);
+
         if (!isHomeAsUpEnabled) {
-            Log.w("ANNA", "HomeUp not enabled");
             ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(false);
             ((SelectCallback) getActivity()).setToggleListener(true);
         } else {
-            Log.w("ANNA", "HomeUp enabled");
             ((SelectCallback) getActivity()).setToggleListener(false);
             ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayShowHomeEnabled(true);
+            ((MainActivity)getActivity()).getToggle().setToolbarNavigationClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    getActivity().onBackPressed();
+                }
+            });
         }
 
         emptyView.setText(emptyText);
@@ -116,7 +108,6 @@ public class MainActivityFragment extends Fragment {
         Pair<CustomAdapter, CustomLoader> pair = ((MainActivity) getActivity()).createAdapterAndLoader(type);
         adapter = pair.first;
         loader = pair.second;
-        Log.w("ANNA", "loader == null " + (loader == null));
 
         adapter.setEmptyView(emptyView);
         adapter.bindRecyclerView(recyclerView);
@@ -132,21 +123,19 @@ public class MainActivityFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-//        Log.w("ANNA", "SAVE!! " + (adapter == null));
-        // When tablets rotate, the currently selected list item needs to be saved.
         if (adapter != null) {
             adapter.onSaveInstanceState(outState);
         }
-        outState.putString("empty_text", emptyText);
-        outState.putString("loading_text", loadText);
-        outState.putBoolean("home_up", isHomeAsUpEnabled);
-        outState.putInt("fragment_type", type);
+        outState.putString(EMPTY_TEXT, emptyText);
+        outState.putString(LOADING_TEXT, loadText);
+        outState.putBoolean(HOME_UP, isHomeAsUpEnabled);
+        outState.putInt(FRAGMENT_TYPE, type);
+        outState.putString(TITLE, title);
         super.onSaveInstanceState(outState);
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        Log.w("ANNA", "activity created");
         loader.initLoader();
         super.onActivityCreated(savedInstanceState);
     }

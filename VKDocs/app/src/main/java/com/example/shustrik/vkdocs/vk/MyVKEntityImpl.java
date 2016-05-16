@@ -5,6 +5,9 @@ import android.database.Cursor;
 
 import com.example.shustrik.vkdocs.common.DBConverter;
 
+/**
+ * Common class for document holder entity (dialog or community)
+ */
 public class MyVKEntityImpl implements MyVKEntity {
     private int peerId;
 
